@@ -520,88 +520,125 @@ function piPanel(pi, snap) {
   $("ph").innerHTML = tiles.map(t => `<div class="t"><div class="lbl">${t[0]}</div><div class="v" style="font-size:17px">${t[1]}</div></div>`).join("");
 }
 
+function panelSafe(name, fn) {
+  try { fn(); }
+  catch (e) {
+    console.error("panel " + name, e);
+    const b = $("banner");
+    if (b) {
+      b.textContent = "Panel error (" + name + "): " + (e && e.message ? e.message : e);
+      b.classList.add("show");
+    }
+  }
+}
+
 function render(snap, meta) {
   meta = meta || {};
-  const age = snap.age != null ? snap.age : (snap.t ? (Date.now() / 1000 - snap.t) : null);
-  const heard = $("heard");
-  const health = $("health");
-  if (age == null) {
-    heard.textContent = "No status yet"; heard.className = "heard warn";
-    health.className = "pill warn"; health.textContent = "● No data";
-  } else if (age > DEAD_MIN * 60) {
-    heard.textContent = "Last heard from " + fmtAge(age) + " — Pi or Starlink may be down";
-    heard.className = "heard bad";
-    health.className = "pill bad"; health.textContent = "● Stale " + Math.round(age / 60) + " min";
-  } else if (age > 20 * 60) {
-    heard.textContent = "Last heard from " + fmtAge(age);
-    heard.className = "heard warn";
-    health.className = "pill warn"; health.textContent = "● " + Math.round(age / 60) + " min ago";
-  } else {
-    heard.textContent = "Last heard from " + fmtAge(age) + (meta.offline ? " (cached)" : "") + (meta.mock ? " · mock" : "");
-    heard.className = "heard";
-    health.className = "pill ok"; health.textContent = "● Live";
+  try {
+    const age = snap.age != null ? snap.age : (snap.t ? (Date.now() / 1000 - snap.t) : null);
+    const heard = $("heard");
+    const health = $("health");
+    if (age == null) {
+      heard.textContent = "No status yet"; heard.className = "heard warn";
+      health.className = "pill warn"; health.textContent = "● No data";
+    } else if (age > DEAD_MIN * 60) {
+      heard.textContent = "Last heard from " + fmtAge(age) + " — Pi or Starlink may be down";
+      heard.className = "heard bad";
+      health.className = "pill bad"; health.textContent = "● Stale " + Math.round(age / 60) + " min";
+    } else if (age > 20 * 60) {
+      heard.textContent = "Last heard from " + fmtAge(age);
+      heard.className = "heard warn";
+      health.className = "pill warn"; health.textContent = "● " + Math.round(age / 60) + " min ago";
+    } else {
+      heard.textContent = "Last heard from " + fmtAge(age) + (meta.offline ? " (cached)" : "") + (meta.mock ? " · mock" : "");
+      heard.className = "heard";
+      health.className = "pill ok"; health.textContent = "● Live";
+    }
+    document.body.classList.toggle("offline", !!meta.offline);
+
+    panelSafe("gauge", () => {
+      setGauge(snap.soc);
+      $("bv").textContent = snap.bv != null ? Number(snap.bv).toFixed(1) : "--";
+      if (snap.wa != null) {
+        const a = snap.wa, e = $("amps");
+        e.textContent = (a >= 0 ? "+" : "") + Number(a).toFixed(1) + " A " + (a >= 0 ? "charging" : "using");
+        e.className = "big " + (a >= 0 ? "chg" : "dis");
+        e.style.fontSize = "20px";
+      } else $("amps").textContent = "--";
+      $("cst").textContent = snap.cst || "--";
+      $("pv").innerHTML = snap.pv != null ? Math.round(snap.pv) + " <small>W</small>" : "--";
+      $("pvv").innerHTML = f1(snap.pvv, "V");
+      $("rah").innerHTML = snap.rah != null ? snap.rah + " <small>Ah</small>" : "--";
+      $("kwh").innerHTML = f1(snap.kwh, "kWh");
+    });
+
+    panelSafe("runtime", () => runtimePanel(snap));
+    panelSafe("generator", () => genPanel(snap));
+
+    panelSafe("load", () => {
+      const on = !!(snap.g && snap.g.on);
+      $("lw").innerHTML = snap.lw != null ? Math.round(snap.lw) + " <small style='font-size:16px;color:var(--mut)'>W</small>" : "--";
+      $("lw").className = "big" + (on ? " grey" : "");
+      $("la").textContent = snap.la != null ? "≈ " + Number(snap.la).toFixed(1) + " A" : "";
+      $("loadTag").textContent = on ? "reads low: generator on" : "estimate";
+      $("loadNote").innerHTML = (on ? "<b style='color:var(--y)'>Generator is charging, so this reads low.</b> " : "") +
+        "Estimate = Classic charger amps − battery net amps (Whizbang Jr), × battery volts.";
+      const td = (snap.d || [])[(snap.d || []).length - 1] || {};
+      $("loadK").innerHTML = f1(td.l, "kWh");
+      $("solK").innerHTML = f1(td.s != null ? td.s : snap.kwh, "kWh");
+    });
+
+    panelSafe("energyBars", () => energyBars(snap.d));
+    panelSafe("charts", () => {
+      const h = snap.h || {};
+      let socLo = 65;
+      const knownSoc = (h.s || []).filter(v => v != null);
+      if (knownSoc.some(v => v < 65)) socLo = Math.min(...knownSoc);
+      sparkline($("cSoc"), h.s, "#3ccf7a", socLo, 100);
+      sparkline($("cAmps"), h.a, "#4aa8ff", null, null, true);
+      sparkline($("cLoad"), h.l, "#ff9f43", 0, null);
+      sparkline($("cPv"), h.p, "#f5c542", 0, null);
+      if (h.t && h.t.length) $("range").textContent = tf(h.t[0]) + " → " + tf(h.t[h.t.length - 1]);
+      else $("range").textContent = "";
+
+      if (meta.series && meta.series.t && meta.series.t.length >= 2) {
+        const ser = meta.series;
+        const serSoc = (ser.s || []).filter(v => v != null);
+        const lo = serSoc.length ? Math.min(65, ...serSoc) : 65;
+        sparkline($("cSoc"), ser.s, "#3ccf7a", lo, 100);
+        sparkline($("cAmps"), ser.a, "#4aa8ff", null, null, true);
+        sparkline($("cLoad"), ser.l, "#ff9f43", 0, null);
+        if (ser.p && ser.p.some(v => v != null)) sparkline($("cPv"), ser.p, "#f5c542", 0, null);
+        $("range").textContent = tf(ser.t[0]) + " → " + tf(ser.t[ser.t.length - 1]) + " · from status posts";
+      }
+    });
+
+    panelSafe("batteryHealth", () => bhPanel(snap.bh));
+    panelSafe("piHealth", () => piPanel(snap.pi, snap));
+
+    panelSafe("alerts", () => {
+      const ul = $("alerts");
+      const al = snap.al || [];
+      if (!al.length) ul.innerHTML = '<li><span class="when">No recent alerts in snapshot</span></li>';
+      else ul.innerHTML = al.map(a => `<li><span>${a.ti || a.k || "alert"}</span><span class="when">${tf(a.t)}</span></li>`).join("");
+    });
+
+    try { localStorage.setItem("chLastSnap", JSON.stringify({ snap, at: Date.now() })); } catch {}
+  } catch (e) {
+    console.error("render", e);
+    const heard = $("heard");
+    if (heard) {
+      heard.textContent = "Render error: " + (e && e.message ? e.message : e);
+      heard.className = "heard bad";
+    }
+    const health = $("health");
+    if (health) { health.className = "pill bad"; health.textContent = "● Error"; }
+    const b = $("banner");
+    if (b) {
+      b.textContent = "Render error: " + (e && e.message ? e.message : e);
+      b.classList.add("show");
+    }
   }
-  document.body.classList.toggle("offline", !!meta.offline);
-
-  setGauge(snap.soc);
-  $("bv").textContent = snap.bv != null ? Number(snap.bv).toFixed(1) : "--";
-  if (snap.wa != null) {
-    const a = snap.wa, e = $("amps");
-    e.textContent = (a >= 0 ? "+" : "") + Number(a).toFixed(1) + " A " + (a >= 0 ? "charging" : "using");
-    e.className = "big " + (a >= 0 ? "chg" : "dis");
-    e.style.fontSize = "20px";
-  } else $("amps").textContent = "--";
-  $("cst").textContent = snap.cst || "--";
-  $("pv").innerHTML = snap.pv != null ? Math.round(snap.pv) + " <small>W</small>" : "--";
-  $("pvv").innerHTML = f1(snap.pvv, "V");
-  $("rah").innerHTML = snap.rah != null ? snap.rah + " <small>Ah</small>" : "--";
-  $("kwh").innerHTML = f1(snap.kwh, "kWh");
-
-  runtimePanel(snap);
-  genPanel(snap);
-
-  const on = !!(snap.g && snap.g.on);
-  $("lw").innerHTML = snap.lw != null ? Math.round(snap.lw) + " <small style='font-size:16px;color:var(--mut)'>W</small>" : "--";
-  $("lw").className = "big" + (on ? " grey" : "");
-  $("la").textContent = snap.la != null ? "≈ " + Number(snap.la).toFixed(1) + " A" : "";
-  $("loadTag").textContent = on ? "reads low: generator on" : "estimate";
-  $("loadNote").innerHTML = (on ? "<b style='color:var(--y)'>Generator is charging, so this reads low.</b> " : "") +
-    "Estimate = Classic charger amps − battery net amps (Whizbang Jr), × battery volts.";
-  const td = (snap.d || [])[(snap.d || []).length - 1] || {};
-  $("loadK").innerHTML = f1(td.l, "kWh");
-  $("solK").innerHTML = f1(td.s != null ? td.s : snap.kwh, "kWh");
-
-  energyBars(snap.d);
-  const h = snap.h || {};
-  // SoC chart scaled 65–100 per Bj's preference
-  let socLo = 65;
-  if ((h.s || []).some(v => v != null && v < 65)) socLo = Math.min(...(h.s || []).filter(v => v != null));
-  sparkline($("cSoc"), h.s, "#3ccf7a", socLo, 100);
-  sparkline($("cAmps"), h.a, "#4aa8ff", null, null, true);
-  sparkline($("cLoad"), h.l, "#ff9f43", 0, null);
-  sparkline($("cPv"), h.p, "#f5c542", 0, null);
-  if (h.t && h.t.length) $("range").textContent = tf(h.t[0]) + " → " + tf(h.t[h.t.length - 1]);
-  else $("range").textContent = "";
-
-  // merge finer series from multi-snapshot history if present
-  if (meta.series && meta.series.t && meta.series.t.length >= 2) {
-    const ser = meta.series;
-    sparkline($("cSoc"), ser.s, "#3ccf7a", Math.min(65, ...ser.s.filter(v => v != null)), 100);
-    sparkline($("cAmps"), ser.a, "#4aa8ff", null, null, true);
-    sparkline($("cLoad"), ser.l, "#ff9f43", 0, null);
-    if (ser.p && ser.p.some(v => v != null)) sparkline($("cPv"), ser.p, "#f5c542", 0, null);
-    $("range").textContent = tf(ser.t[0]) + " → " + tf(ser.t[ser.t.length - 1]) + " · from status posts";
-  }
-
-  bhPanel(snap.bh);
-  piPanel(snap.pi, snap);
-
-  const ul = $("alerts");
-  const al = snap.al || [];
-  if (!al.length) ul.innerHTML = '<li><span class="when">No recent alerts in snapshot</span></li>';
-  else ul.innerHTML = al.map(a => `<li><span>${a.ti || a.k || "alert"}</span><span class="when">${tf(a.t)}</span></li>`).join("");
-
-  try { localStorage.setItem("chLastSnap", JSON.stringify({ snap, at: Date.now() })); } catch {}
 }
 
 /* ---- Open-Meteo outlook + hunt (phone-side; no secrets) ---- */
@@ -617,7 +654,9 @@ function sunTime(day, rising, lat = LAT, lon = LON) {
   RA = (RA + (Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90)) / 15;
   const sd = 0.39782 * Math.sin(r(L)), cd = Math.cos(Math.asin(sd));
   const ch = (Math.cos(r(90.833)) - sd * Math.sin(r(lat))) / (cd * Math.cos(r(lat)));
-  const H = ((rising ? 360 - Math.acos(ch) * 180 / Math.PI : Math.acos(ch) * 180 / Math.PI)) / 15;
+  const chClamped = Math.max(-1, Math.min(1, ch));
+  if (!isFinite(ch) || Math.abs(ch) > 1) { /* polar / numeric edge */ }
+  const H = ((rising ? 360 - Math.acos(chClamped) * 180 / Math.PI : Math.acos(chClamped) * 180 / Math.PI)) / 15;
   const UT = (H + RA - 0.06571 * t - 6.622 - lh) % 24;
   const base = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate());
   return new Date(base + ((UT + 24) % 24) * 3600000); // UTC instant; display via CT formatter
@@ -761,17 +800,30 @@ function seriesFromMessages(msgs) {
 
 async function fetchNtfyMessages(topic) {
   const url = topicUrl(topic, "/json?poll=1&since=24h");
-  const r = await fetch(url);
-  if (!r.ok) throw new Error("ntfy " + r.status);
-  const text = await r.text();
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  let text;
+  try {
+    const r = await fetch(url, { signal: ctrl.signal, cache: "no-store" });
+    if (!r.ok) throw new Error("ntfy " + r.status);
+    text = await r.text();
+  } catch (e) {
+    if (e && e.name === "AbortError") throw new Error("ntfy timeout (15s)");
+    throw e;
+  } finally {
+    clearTimeout(timer);
+  }
   const msgs = [];
   for (const line of text.split("\n")) {
     if (!line.trim()) continue;
     try {
       const msg = JSON.parse(line);
+      // tolerate open/keepalive/other non-message events
       if (msg.event === "message" && msg.message) msgs.push(msg);
     } catch {}
   }
+  // newest last by ntfy time when available
+  msgs.sort((a, b) => (a.time || 0) - (b.time || 0));
   return msgs;
 }
 
@@ -790,6 +842,8 @@ async function refresh() {
       return;
     }
     if (!CFG.dataTopic) { openSettings(); return; }
+    $("heard").textContent = "Fetching status…";
+    $("health").className = "pill"; $("health").textContent = "loading…";
     const msgs = await fetchNtfyMessages(CFG.dataTopic);
     if (!msgs.length) throw new Error("no cached status yet");
     const snaps = [];
