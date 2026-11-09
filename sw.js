@@ -1,10 +1,11 @@
 /* Corral Hill PWA service worker: cache shell + last snapshot for offline. */
-const CACHE = "ch-shell-v3";
+const CACHE = "ch-shell-v2";
 const SHELL = [
   "./",
   "./index.html",
   "./manifest.webmanifest",
   "./icons/apple-touch-icon.png",
+  "./icons/icon-180.png",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./mock-snapshot.json"
@@ -21,7 +22,6 @@ self.addEventListener("activate", (e) => {
 });
 self.addEventListener("fetch", (e) => {
   const url = new URL(e.request.url);
-  // never cache ntfy live polls in the SW shell; network-first with cache fallback for our origin only
   if (url.origin === self.location.origin) {
     e.respondWith(
       fetch(e.request).then((r) => {
@@ -32,5 +32,4 @@ self.addEventListener("fetch", (e) => {
     );
     return;
   }
-  // ntfy / other: network only (app caches snapshot in localStorage itself)
 });

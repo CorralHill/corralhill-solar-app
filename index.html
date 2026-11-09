@@ -5,147 +5,209 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="theme-color" content="#0c1016">
-<title>Corral Hill</title>
+<meta name="theme-color" content="#0f1419">
+<title>Corral Hill Power</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
-:root {
-  --bg: #0c1016; --card: #151b24; --line: #243042; --text: #e8eef6; --muted: #8b9bb0;
-  --green: #3ccf7a; --yellow: #e6b84d; --red: #ef5b5b; --blue: #4aa8ff; --orange: #ff9f43;
-  --pad: max(16px, env(safe-area-inset-left));
-  --padr: max(16px, env(safe-area-inset-right));
-  --padt: max(12px, env(safe-area-inset-top));
-  --padb: max(20px, env(safe-area-inset-bottom));
+:root{
+  --bg:#0f1419;--card:#1a2129;--line:#2a333d;--txt:#e8edf2;--mut:#8b98a5;
+  --g:#3ccf7a;--y:#f5c542;--r:#ff5d5d;--b:#4aa8ff;--o:#ff9f43;
+  --pad:max(14px,env(safe-area-inset-left));
+  --padr:max(14px,env(safe-area-inset-right));
+  --padt:max(10px,env(safe-area-inset-top));
+  --padb:max(22px,env(safe-area-inset-bottom));
 }
-* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
-  font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  min-height: 100%; }
-body { padding: var(--padt) var(--padr) var(--padb) var(--pad); }
-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
-h1 { font-size: 18px; font-weight: 650; margin: 0; letter-spacing: 0.2px; }
-.sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
-.iconbtn { background: var(--card); border: 1px solid var(--line); color: var(--text);
-  border-radius: 12px; width: 40px; height: 40px; font-size: 18px; }
-.heard { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
-.heard.bad { color: var(--red); font-weight: 600; }
-.heard.warn { color: var(--yellow); }
-.gauge-wrap { display: flex; gap: 14px; align-items: center; background: var(--card);
-  border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin-bottom: 12px; }
-.gauge { position: relative; width: 132px; height: 132px; flex: 0 0 auto; }
-.gauge svg { width: 132px; height: 132px; transform: rotate(-90deg); }
-.gauge .bg { stroke: #243042; }
-.gauge .fg { stroke-linecap: round; transition: stroke-dashoffset .4s ease, stroke .3s; }
-.gauge .center { position: absolute; inset: 0; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; text-align: center; }
-.gauge .soc { font-size: 34px; font-weight: 700; line-height: 1; }
-.gauge .unit { font-size: 12px; color: var(--muted); margin-top: 2px; }
-.vitals { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
-.vital .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
-.vital .v { font-size: 20px; font-weight: 650; margin-top: 2px; }
-.vital .u { font-size: 12px; color: var(--muted); font-weight: 500; }
-.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
-.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
-.card h2 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 600;
-  text-transform: uppercase; letter-spacing: .4px; }
-.spark { width: 100%; height: 56px; display: block; }
-.meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
-.bh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font-size: 14px; }
-.bh-grid .k { color: var(--muted); font-size: 12px; }
-.bh-grid .bad { color: var(--yellow); }
-.alerts { list-style: none; margin: 0; padding: 0; }
-.alerts li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0;
-  border-top: 1px solid var(--line); font-size: 14px; }
-.alerts li:first-child { border-top: 0; padding-top: 0; }
-.alerts .when { color: var(--muted); font-size: 12px; white-space: nowrap; }
-.actions { display: flex; gap: 10px; margin: 14px 0 8px; }
-button.primary { flex: 1; background: var(--green); color: #062314; border: 0; border-radius: 14px;
-  padding: 14px; font-size: 16px; font-weight: 700; }
-button.primary:disabled { opacity: .55; }
-button.ghost { background: var(--card); color: var(--text); border: 1px solid var(--line);
-  border-radius: 14px; padding: 14px 16px; font-size: 15px; font-weight: 600; }
-.note { font-size: 12px; color: var(--muted); margin-top: 4px; }
-.banner { background: #2a1a1a; border: 1px solid #5a2a2a; color: #ffb4b4; border-radius: 12px;
-  padding: 10px 12px; font-size: 13px; margin-bottom: 12px; display: none; }
-.banner.show { display: block; }
-/* settings sheet */
-#settings { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 20;
-  padding: var(--padt) var(--padr) var(--padb) var(--pad); }
-#settings.open { display: flex; align-items: flex-end; }
-#settings .sheet { background: var(--card); border: 1px solid var(--line); border-radius: 18px 18px 12px 12px;
-  padding: 18px; width: 100%; max-height: 90%; overflow: auto; }
-#settings h2 { margin: 0 0 12px; font-size: 18px; }
-label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
-input[type=text], input[type=number] { width: 100%; background: var(--bg); border: 1px solid var(--line);
-  color: var(--text); border-radius: 10px; padding: 12px; font-size: 15px; }
-.sheet .actions { margin-top: 16px; }
-.offline { opacity: .85; }
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--txt);
+  font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;min-height:100%}
+body{padding:var(--padt) var(--padr) var(--padb) var(--pad)}
+header{display:flex;justify-content:space-between;align-items:center;margin:2px 0 12px}
+h1{font-size:19px;margin:0;letter-spacing:.2px;font-weight:700}
+h1 span{color:var(--y)}
+.pill{font-size:12px;padding:4px 10px;border-radius:99px;background:var(--card);border:1px solid var(--line);color:var(--mut);white-space:nowrap}
+.pill.ok{color:var(--g);border-color:#24553a}.pill.bad{color:var(--r);border-color:#5a2a2a}.pill.warn{color:var(--y);border-color:#5a4a20}
+.iconbtn{background:var(--card);border:1px solid var(--line);color:var(--txt);border-radius:12px;width:40px;height:40px;font-size:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px}
+.hero{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.gauge{position:relative;width:140px;height:140px;flex:none;margin:0 auto}
+.gauge svg{width:140px;height:140px;transform:rotate(-90deg)}
+.gauge .c{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.soc{font-size:40px;font-weight:700;line-height:1}.soc small{font-size:16px;color:var(--mut);font-weight:600}
+.lbl{color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.55px}
+.heroinfo{flex:1;min-width:140px}
+.big{font-size:26px;font-weight:650}.chg{color:var(--g)}.dis{color:var(--y)}
+.rt{flex:1 1 100%;background:#141a21;border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.rt .big{font-size:24px}.rt.warn{border-color:#6a2c2c}.rt.warn .big{color:var(--r)}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.t{background:#141a21;border:1px solid var(--line);border-radius:14px;padding:12px}
+.t .v{font-size:20px;font-weight:650;margin-top:2px}.t .v small{font-size:12px;color:var(--mut);font-weight:500}
+h2{font-size:13px;margin:0 0 10px;color:var(--mut);font-weight:600;text-transform:uppercase;letter-spacing:.55px;
+  display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:99px;background:#263240;color:var(--mut);text-transform:none;letter-spacing:0;font-weight:600}
+.tag.on{background:#153d27;color:var(--g)}.tag.est{background:#3a3320;color:var(--y)}
+.note{font-size:12px;color:var(--mut);margin-top:8px}
+.chart{width:100%;height:110px;display:block}
+.spark{width:100%;height:64px;display:block}
+.actions{display:flex;gap:10px;margin:12px 0 6px}
+button.primary{flex:1;background:var(--g);color:#062314;border:0;border-radius:14px;padding:14px;font-size:16px;font-weight:700}
+button.primary:disabled{opacity:.55}
+button.ghost{background:var(--card);color:var(--txt);border:1px solid var(--line);border-radius:14px;padding:14px 16px;font-size:15px;font-weight:600}
+.banner{background:#2a1a1a;border:1px solid #5a2a2a;color:#ffb4b4;border-radius:12px;padding:10px 12px;font-size:13px;margin-bottom:12px;display:none}
+.banner.show{display:block}
+.days{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.flag{font-size:13px;font-weight:600;margin-top:6px}.flag.likely{color:var(--r)}.flag.maybe{color:var(--y)}.flag.ok{color:var(--g)}
+.arrow{display:inline-block;font-weight:700;color:var(--b);transition:transform .4s}
+.win{background:#141a21;border:1px solid var(--line);border-radius:14px;padding:12px;margin-top:10px}
+.win .h{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.hint{font-size:13px;margin-top:6px}.hint.yes{color:var(--g)}.hint.no{color:var(--r)}.hint.info{color:var(--mut)}
+.legend{font-size:11px;color:var(--mut);display:flex;gap:12px;margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+table{width:100%;border-collapse:collapse;font-size:13px;margin-top:8px}
+td,th{padding:5px 3px;border-bottom:1px solid var(--line);text-align:right}
+th{color:var(--mut);font-weight:500;font-size:11px;text-transform:uppercase}
+td:first-child,th:first-child{text-align:left}
+.alerts{list-style:none;margin:0;padding:0}
+.alerts li{display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
+.alerts li:first-child{border-top:0;padding-top:0}
+.alerts .when{color:var(--mut);font-size:12px;white-space:nowrap}
+.stat{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.grey{opacity:.45}
+.heard{font-size:13px;color:var(--mut);margin:0 0 10px}
+.heard.bad{color:var(--r);font-weight:600}.heard.warn{color:var(--y)}
+#settings{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:20;
+  padding:var(--padt) var(--padr) var(--padb) var(--pad)}
+#settings.open{display:flex;align-items:flex-end}
+#settings .sheet{background:var(--card);border:1px solid var(--line);border-radius:18px 18px 12px 12px;
+  padding:18px;width:100%;max-height:90%;overflow:auto}
+#settings h2{margin:0 0 12px;font-size:18px;text-transform:none;letter-spacing:0;color:var(--txt)}
+label{display:block;font-size:12px;color:var(--mut);margin:10px 0 4px}
+input[type=text],input[type=number]{width:100%;background:var(--bg);border:1px solid var(--line);
+  color:var(--txt);border-radius:10px;padding:12px;font-size:15px}
+.sheet .actions{margin-top:16px}
+.offline{opacity:.9}
+.foot{font-size:11px;color:var(--mut);text-align:center;margin-top:8px}
 </style>
 </head>
 <body>
 <header>
-  <div>
-    <h1>Corral Hill</h1>
-    <div class="sub" id="stage">Solar · away</div>
+  <h1>☀️ Corral Hill <span>Power</span></h1>
+  <div style="display:flex;gap:8px;align-items:center">
+    <div id="health" class="pill">loading…</div>
+    <button class="iconbtn" id="btnSettings" aria-label="Settings" title="Settings">⚙</button>
   </div>
-  <button class="iconbtn" id="btnSettings" aria-label="Settings" title="Settings">⚙</button>
 </header>
 
 <div class="banner" id="banner"></div>
 <div class="heard" id="heard">Loading…</div>
 
-<div class="gauge-wrap">
+<div class="card hero">
   <div class="gauge">
-    <svg viewBox="0 0 120 120" aria-hidden="true">
-      <circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"></circle>
-      <circle class="fg" id="ring" cx="60" cy="60" r="52" fill="none" stroke-width="10"
-              stroke="#3ccf7a" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
+    <svg viewBox="0 0 170 170" aria-hidden="true">
+      <circle cx="85" cy="85" r="72" fill="none" stroke="#263240" stroke-width="16"/>
+      <circle id="arc" cx="85" cy="85" r="72" fill="none" stroke="var(--g)" stroke-width="16"
+              stroke-linecap="round" stroke-dasharray="452.4" stroke-dashoffset="452.4"
+              style="transition:stroke-dashoffset .8s,stroke .8s"/>
     </svg>
-    <div class="center">
-      <div class="soc" id="soc">—</div>
-      <div class="unit">SoC</div>
-    </div>
+    <div class="c"><div class="soc"><span id="soc">--</span><small>%</small></div>
+      <div class="lbl" style="font-size:11px;letter-spacing:.4px">charged</div></div>
   </div>
-  <div class="vitals">
-    <div class="vital"><div class="k">Battery</div><div class="v" id="bv">— <span class="u">V</span></div></div>
-    <div class="vital"><div class="k">Solar</div><div class="v" id="pv">— <span class="u">W</span></div></div>
-    <div class="vital"><div class="k">Today</div><div class="v" id="kwh">— <span class="u">kWh</span></div></div>
-    <div class="vital"><div class="k">Stage</div><div class="v" id="cst">—</div></div>
+  <div class="heroinfo">
+    <div class="lbl">Battery</div>
+    <div class="big"><span id="bv">--</span> V</div>
+    <div class="big" style="font-size:20px" id="amps">--</div>
+    <div class="lbl" style="margin-top:8px">Charger: <b id="cst" style="color:var(--txt);text-transform:none;letter-spacing:0">--</b></div>
   </div>
-</div>
-
-<div class="row">
-  <div class="card">
-    <h2>Net amps</h2>
-    <div class="v" id="wa" style="font-size:22px;font-weight:650">—</div>
-    <div class="meta" id="a15">15-min avg —</div>
-  </div>
-  <div class="card">
-    <h2>Load / bank</h2>
-    <div class="v" id="lw" style="font-size:22px;font-weight:650">—</div>
-    <div class="meta" id="rah">remaining —</div>
+  <div class="rt" id="rt">
+    <div class="lbl" id="rtL">Runtime</div>
+    <div class="big" id="rtV">--</div>
+    <div id="rtS" class="note" style="margin-top:2px"></div>
   </div>
 </div>
 
-<div class="card" style="margin-bottom:12px">
-  <h2>Last 24 h · SoC</h2>
-  <svg class="spark" id="sparkSoc" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
-  <h2 style="margin-top:12px">Last 24 h · PV W</h2>
-  <svg class="spark" id="sparkPv" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
+<div class="grid" style="margin-bottom:12px">
+  <div class="t"><div class="lbl">Solar watts</div><div class="v" id="pv">--</div></div>
+  <div class="t"><div class="lbl">PV volts</div><div class="v" id="pvv">--</div></div>
+  <div class="t"><div class="lbl">Remaining</div><div class="v" id="rah">--</div></div>
+  <div class="t"><div class="lbl">Solar today</div><div class="v" id="kwh">--</div></div>
 </div>
 
-<div class="card" style="margin-bottom:12px">
-  <h2>Battery health</h2>
-  <div class="bh-grid" id="bh">
-    <div><div class="k">Capacity</div><div id="bhCap">—</div></div>
-    <div><div class="k">Resistance</div><div id="bhR">—</div></div>
-    <div><div class="k">Efficiency</div><div id="bhEff">—</div></div>
-    <div><div class="k">Days since float</div><div id="bhFloat">—</div></div>
+<div class="card">
+  <h2>⛽ Generator helper <span id="genTag" class="tag">--</span></h2>
+  <div id="genNow"></div>
+  <div class="grid" style="margin-top:10px;grid-template-columns:repeat(3,1fr)">
+    <div class="t"><div class="lbl">To 100%</div><div class="v" id="ttf" style="font-size:16px">--</div></div>
+    <div class="t"><div class="lbl">Ah to full</div><div class="v" id="ahf" style="font-size:16px">--</div></div>
+    <div class="t"><div class="lbl">Non-solar A</div><div class="v" id="xa" style="font-size:16px">--</div></div>
   </div>
+  <div class="note">Straight-line guess at today's amps. AGM slows near full. Capacity <span id="cap">--</span> Ah.</div>
+  <div class="lbl" style="margin-top:12px">Recent generator runs</div>
+  <div id="runs" class="note">None logged yet</div>
 </div>
 
-<div class="card" style="margin-bottom:12px">
+<div class="card" id="loadCard">
+  <h2>🏠 Cabin load <span id="loadTag" class="tag est">estimate</span></h2>
+  <div class="stat"><div class="big" id="lw">--</div><div class="lbl" id="la"></div></div>
+  <div class="grid" style="margin-top:10px">
+    <div class="t"><div class="lbl">Used today</div><div class="v" id="loadK">--</div></div>
+    <div class="t"><div class="lbl">Solar in today</div><div class="v" id="solK">--</div></div>
+  </div>
+  <div class="note" id="loadNote">Estimate = Classic charger amps − battery net amps (Whizbang Jr), × battery volts.</div>
+</div>
+
+<div class="card">
+  <h2>🌤️ Solar outlook <span id="olAge" class="age" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:var(--mut)"></span></h2>
+  <div id="ol" class="days"></div>
+  <div class="note">Open-Meteo forecast from your phone. Under 2 h sun (or &lt;5 MJ/m²) → likely generator; under 4 h (or &lt;9) → maybe.</div>
+</div>
+
+<div class="card">
+  <h2>🦌 Hunt <span id="hAge" class="age" style="text-transform:none;letter-spacing:0;font-weight:400;font-size:11px;color:var(--mut)"></span></h2>
+  <div class="grid">
+    <div class="t"><div class="lbl">Sunrise</div><div class="v" id="hSr" style="font-size:17px">--</div></div>
+    <div class="t"><div class="lbl">Sunset</div><div class="v" id="hSs" style="font-size:17px">--</div></div>
+    <div class="t"><div class="lbl">Shooting starts</div><div class="v" id="hS0" style="font-size:17px">--</div></div>
+    <div class="t"><div class="lbl">Shooting ends</div><div class="v" id="hS1" style="font-size:17px">--</div></div>
+  </div>
+  <div class="note" id="hNow"></div>
+  <div class="win" id="hM"></div>
+  <div class="win" id="hE"></div>
+  <div class="note">Evening sits only in this app's notes. Cabin weather stays on the LAN dashboard (needs Ambient keys).</div>
+</div>
+
+<div class="card">
+  <h2>📊 Daily energy · 7 days</h2>
+  <svg id="eb" class="chart" style="height:140px"></svg>
+  <div class="legend"><span><i style="background:var(--y)"></i>Solar kWh</span><span><i style="background:var(--o)"></i>Load kWh</span><span><i style="background:#6b5a45"></i>Gen day</span></div>
+  <div id="et"></div>
+</div>
+
+<div class="card">
+  <h2>Last 24 hours</h2>
+  <div class="lbl">SOC % (65–100)</div>
+  <svg id="cSoc" class="spark"></svg>
+  <div class="lbl" style="margin-top:8px">Net amps (+ charging / − using)</div>
+  <svg id="cAmps" class="spark"></svg>
+  <div class="lbl" style="margin-top:8px">Cabin load W</div>
+  <svg id="cLoad" class="spark"></svg>
+  <div class="lbl" style="margin-top:8px">Solar W (hourly max)</div>
+  <svg id="cPv" class="spark"></svg>
+  <div id="range" class="note"></div>
+</div>
+
+<div class="card">
+  <h2>🔋 Battery health</h2>
+  <div id="bhW"></div>
+  <div class="grid" id="bh"></div>
+  <div class="note">Capacity from SoC swings; resistance from amp steps; efficiency between 100% points. "Collecting" means not enough cycles yet.</div>
+</div>
+
+<div class="card">
+  <h2>🍓 Pi health</h2>
+  <div class="grid" id="ph"></div>
+</div>
+
+<div class="card">
   <h2>Recent alerts</h2>
   <ul class="alerts" id="alerts"><li><span class="when">No alerts yet</span></li></ul>
 </div>
@@ -154,12 +216,12 @@ input[type=text], input[type=number] { width: 100%; background: var(--bg); borde
   <button class="primary" id="btnCheckin">Check in</button>
   <button class="ghost" id="btnRefresh">Refresh</button>
 </div>
-<div class="note" id="foot">Pulls a quiet status from ntfy every few minutes. Alerts still come through the ntfy app.</div>
+<div class="foot" id="foot">Quiet status via ntfy every few minutes. Alerts still come through the ntfy app.</div>
 
 <div id="settings">
   <div class="sheet">
     <h2>Settings</h2>
-    <p class="note">Topics are like passwords. Defaults match the Pi's pi.env.new-keys. Nothing else is baked into the app.</p>
+    <p class="note">Topics are like passwords. Enter the three from the Pi's pi.env. Nothing else is baked into the public app.</p>
     <label for="dataTopic">Data topic (status feed)</label>
     <input id="dataTopic" type="text" autocomplete="off" spellcheck="false" placeholder="corralhill-data-…">
     <label for="alertTopic">Alert topic (history)</label>
@@ -184,7 +246,9 @@ const DEFAULTS = {
   ntfyBase: "https://ntfy.sh"
 };
 const DEAD_MIN = 45;
-const CIRC = 2 * Math.PI * 52;
+const CIRC = 2 * Math.PI * 72;
+const LAT = 38.229, LON = -92.366;
+const TZO = { timeZone: "America/Chicago" };
 
 const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
@@ -192,7 +256,7 @@ const MOCK = params.has("mock") || location.protocol === "file:";
 
 function normalizeTopic(t) {
   let s = String(t == null ? "" : t);
-  s = s.replace(/[ -​-‍﻿]/g, "");
+  s = s.replace(/[\u0000-\u001F\u007F\u200B-\u200D\uFEFF]/g, "");
   s = s.trim().replace(/^["']+|["']+$/g, "").trim();
   const m = s.match(/^https?:\/\/[^\/]+\/(.+)$/i);
   if (m) s = m[1];
@@ -233,7 +297,6 @@ function saveSettings(s) {
 function b64urlDecode(s) {
   const b64 = String(s).replace(/-/g, "+").replace(/_/g, "/");
   const pad = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-  // atob is fine for ASCII topic names
   return atob(pad);
 }
 function applySetupFromHash() {
@@ -252,16 +315,12 @@ function applySetupFromHash() {
       a = sp.get("a") || sp.get("alertTopic") || "";
       c = sp.get("c") || sp.get("cmdTopic") || "";
     }
-  } catch (e) {
-    return false;
-  }
+  } catch (e) { return false; }
   d = normalizeTopic(d); a = normalizeTopic(a); c = normalizeTopic(c);
   if (!d || !a || !c) return false;
   CFG = { ...CFG, dataTopic: d, alertTopic: a, cmdTopic: c };
   saveSettings(CFG);
-  try {
-    history.replaceState(null, "", location.pathname + location.search);
-  } catch (e) {}
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
   return true;
 }
 let CFG = loadSettings();
@@ -272,6 +331,19 @@ function topicUrl(topic, path) {
   return `${CFG.ntfyBase}/${t}${path || ""}`;
 }
 
+const hm = t => t ? new Date(t * 1000).toLocaleString("en-US", { ...TZO, hour: "numeric", minute: "2-digit" }) : "--";
+const dshort = t => new Date(t * 1000).toLocaleString("en-US", { ...TZO, month: "short", day: "numeric" });
+const tf = t => new Date(t * 1000).toLocaleString("en-US", { ...TZO, month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) + " CT";
+const dur = s => { s = Math.max(0, Math.round(s / 60)); const h = Math.floor(s / 60), m = s % 60; return h ? h + " h " + m + " min" : m + " min"; };
+const col = s => s == null ? "#8b98a5" : s >= 90 ? "var(--g)" : s >= 70 ? "var(--y)" : "var(--r)";
+const f1 = (v, u) => v == null ? "--" : (+v).toFixed(1) + (u ? " <small>" + u + "</small>" : "");
+const f0 = (v, u) => v == null ? "--" : Math.round(v) + (u ? " <small>" + u + "</small>" : "");
+const arrow = d => d == null ? "" : `<span class="arrow" style="transform:rotate(${d}deg)">↓</span>`;
+const compass = deg => {
+  if (deg == null) return "--";
+  return ["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"][Math.round(((deg % 360) / 22.5)) % 16];
+};
+
 function fmtAge(sec) {
   if (sec == null || isNaN(sec)) return "—";
   if (sec < 60) return Math.round(sec) + "s ago";
@@ -279,43 +351,29 @@ function fmtAge(sec) {
   if (sec < 86400) return (sec / 3600).toFixed(1) + " h ago";
   return (sec / 86400).toFixed(1) + " d ago";
 }
-function fmtWhen(ts) {
-  try {
-    return new Date(ts * 1000).toLocaleString("en-US", {
-      timeZone: "America/Chicago", month: "short", day: "numeric",
-      hour: "numeric", minute: "2-digit"
-    }) + " CT";
-  } catch { return ""; }
-}
-function socColor(soc) {
-  if (soc == null) return "#8b9bb0";
-  if (soc <= 65) return "#ef5b5b";
-  if (soc <= 70) return "#e6b84d";
-  return "#3ccf7a";
-}
 
 function setGauge(soc) {
-  const ring = $("ring");
+  const a = $("arc");
   const pct = Math.max(0, Math.min(100, soc == null ? 0 : soc)) / 100;
-  ring.style.stroke = socColor(soc);
-  ring.setAttribute("stroke-dashoffset", String(CIRC * (1 - pct)));
-  $("soc").textContent = soc == null ? "—" : String(Math.round(soc));
-  $("soc").style.color = socColor(soc);
+  a.style.stroke = col(soc);
+  a.style.strokeDashoffset = String(452.4 * (1 - pct));
+  $("soc").textContent = soc == null ? "--" : String(Math.round(soc));
+  $("soc").style.color = col(soc);
 }
 
-function sparkline(svg, values, color, minY, maxY) {
+function sparkline(svg, values, color, minY, maxY, zero) {
   const nums = (values || []).map(v => (v == null ? null : Number(v)));
   const known = nums.filter(v => v != null);
-  svg.innerHTML = "";
   if (known.length < 2) {
-    svg.innerHTML = `<text x="8" y="32" fill="#8b9bb0" font-size="11">collecting…</text>`;
+    svg.innerHTML = `<text x="8" y="36" fill="#8b98a5" font-size="11">collecting…</text>`;
     return;
   }
-  const lo = minY != null ? minY : Math.min(...known);
-  const hi = maxY != null ? maxY : Math.max(...known);
-  const span = Math.max(1e-6, hi - lo);
-  const w = 300, h = 56, pad = 4;
-  const n = nums.length;
+  let lo = minY != null ? minY : Math.min(...known);
+  let hi = maxY != null ? maxY : Math.max(...known);
+  if (zero) { lo = Math.min(lo, 0); hi = Math.max(hi, 0); }
+  if (hi - lo < 1) { hi += 1; lo -= 1; }
+  const w = 300, h = 64, pad = 4;
+  const n = nums.length, span = hi - lo;
   let d = "";
   nums.forEach((v, i) => {
     if (v == null) return;
@@ -323,114 +381,432 @@ function sparkline(svg, values, color, minY, maxY) {
     const y = h - pad - ((v - lo) / span) * (h - 2 * pad);
     d += (d ? " L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
   });
-  // area fill
   const first = nums.findIndex(v => v != null);
   const last = n - 1 - [...nums].reverse().findIndex(v => v != null);
   const x0 = pad + (first / (n - 1)) * (w - 2 * pad);
   const x1 = pad + (last / (n - 1)) * (w - 2 * pad);
-  const area = d + ` L${x1} ${h - pad} L${x0} ${h - pad} Z`;
-  svg.innerHTML = `<path d="${area}" fill="${color}" opacity="0.18"></path>
+  let s = `<path d="${d} L${x1} ${h - pad} L${x0} ${h - pad} Z" fill="${color}" opacity="0.15"></path>
     <path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></path>`;
+  if (zero && lo < 0 && hi > 0) {
+    const y0 = h - pad - ((0 - lo) / span) * (h - 2 * pad);
+    s += `<line x1="${pad}" x2="${w - pad}" y1="${y0}" y2="${y0}" stroke="#55616e" stroke-dasharray="4 4"/>`;
+  }
+  svg.setAttribute("viewBox", `0 0 ${w} ${h}`);
+  svg.innerHTML = s;
+}
+
+function runtimePanel(snap) {
+  const box = $("rt"), L = $("rtL"), V = $("rtV"), S = $("rtS");
+  box.className = "rt";
+  const soc = snap.soc, rem = snap.rah, a = snap.a15 != null ? snap.a15 : snap.wa;
+  const low = snap.sl != null ? snap.sl : 50;
+  if (!soc || !rem || a == null) { L.textContent = "Runtime"; V.textContent = "--"; S.textContent = "Waiting for SOC and amps"; return; }
+  const cap = rem / (soc / 100);
+  const avg = (a > 0 ? "+" : "") + Number(a).toFixed(1) + " A avg, last 15 min";
+  // rough night check via local Chicago hour
+  const hour = Number(new Date().toLocaleString("en-US", { ...TZO, hour: "numeric", hour12: false }));
+  const night = hour < 7 || hour >= 18;
+  if (Math.abs(a) < 0.5) {
+    L.textContent = "Battery"; V.textContent = "Steady";
+    S.textContent = "Net current about 0 A (" + avg + ")" + (cap ? ` · bank ≈ ${Math.round(cap)} Ah` : "");
+    return;
+  }
+  if (a < 0) {
+    const ah = (soc - low) / 100 * cap;
+    const hours = soc > low ? Math.max(0, ah) / -a : 0;
+    L.textContent = "Time to " + low + "%";
+    V.textContent = hours > 0 ? dur(hours * 3600) : "At " + low + "% now";
+    const lowAt = Date.now() / 1000 + hours * 3600;
+    S.innerHTML = `≈ ${hm(lowAt)} CT · ${avg}` + (cap ? ` · bank ≈ ${Math.round(cap)} Ah` : "");
+    if (hours < 3) box.className = "rt warn";
+  } else {
+    const hours = soc < 100 ? (cap - rem) / a : 0;
+    L.textContent = "Time to 100%";
+    V.textContent = soc >= 100 ? "Full" : dur(hours * 3600);
+    const fullAt = Date.now() / 1000 + hours * 3600;
+    S.innerHTML = (soc < 100 ? `≈ ${hm(fullAt)} CT · ` : "") + avg + ". Slows near full." + (cap ? ` · bank ≈ ${Math.round(cap)} Ah` : "");
+  }
+  if (night && a < 0) {
+    // rough sunrise ~7am CT tomorrow/today
+    const now = new Date();
+    const parts = new Intl.DateTimeFormat("en-US", { ...TZO, year:"numeric", month:"2-digit", day:"2-digit" }).formatToParts(now);
+    const get = t => parts.find(p => p.type === t).value;
+    // skip detailed sunrise_soc without exact sun math here — hunt panel has sun
+  }
+}
+
+function genPanel(snap) {
+  const g = snap.g || {}, t = $("genTag");
+  if (g.on) {
+    t.className = "tag on"; t.textContent = "running";
+    const since = g.st ? dur((snap.t || Date.now() / 1000) - g.st) : "?";
+    $("genNow").innerHTML = `<div class="big chg" style="font-size:20px">Generator on for ${since}</div>
+      <div class="note">Since ${hm(g.st)} CT · +${f0(g.ah)} Ah · SOC ${g.ss ?? "?"}→${snap.soc ?? "?"}%</div>`;
+  } else {
+    t.className = "tag"; t.textContent = "off";
+    $("genNow").innerHTML = `<div class="note" style="margin-top:0">No generator run right now. A run is detected when the battery gains ${g.ga ?? 20}+ A more than solar is giving.</div>`;
+  }
+  if (g.htf != null) {
+    const eta = (snap.t || Date.now() / 1000) + g.htf * 3600;
+    $("ttf").innerHTML = dur(g.htf * 3600) + `<div class="note" style="margin:0">≈ ${hm(eta)} CT</div>`;
+  } else $("ttf").innerHTML = snap.soc >= 100 ? "Full" : "--";
+  $("ahf").innerHTML = f0(g.ahf, "Ah");
+  $("xa").innerHTML = g.xa != null ? ((g.xa > 0 ? "+" : "") + f1(g.xa, "A")) : "--";
+  $("cap").textContent = g.cap ?? "--";
+  if (g.r && g.r.length) {
+    $("runs").innerHTML = "<table><tr><th>Day</th><th>Hours</th><th>Ah</th><th>SOC</th></tr>" +
+      g.r.map(r => `<tr><td>${dshort(r.s)}</td><td>${r.h ?? "–"}</td><td>+${r.ah ?? "–"}</td><td>${r.a ?? "?"}→${r.b ?? "?"}%</td></tr>`).join("") + "</table>";
+  } else $("runs").textContent = "None logged yet";
+}
+
+function energyBars(days) {
+  const el = $("eb");
+  if (!days || !days.length) { el.innerHTML = ""; $("et").innerHTML = ""; return; }
+  const W = 300, H = 140, B = 22;
+  el.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  const mx = Math.max(1, ...days.map(r => Math.max(r.s || 0, r.l || 0)));
+  const cw = W / days.length, bw = Math.min(22, cw / 3);
+  let s = "";
+  days.forEach((r, k) => {
+    const cx = k * cw + cw / 2;
+    const dayLabel = r.d || "";
+    const y = v => (H - B - 14) * (v / mx);
+    if (r.s != null) {
+      const h = y(r.s);
+      s += `<rect x="${cx - bw - 2}" y="${H - B - h}" width="${bw}" height="${h}" rx="3" fill="#f5c542"/>`;
+      s += `<text x="${cx - bw / 2 - 2}" y="${H - B - h - 3}" text-anchor="middle" fill="#c9d2db" font-size="10">${Number(r.s).toFixed(1)}</text>`;
+    }
+    if (r.l != null) {
+      const h = y(r.l), gc = (r.gm || 0) > 0;
+      s += `<rect x="${cx + 2}" y="${H - B - h}" width="${bw}" height="${h}" rx="3" fill="${gc ? "#6b5a45" : "#ff9f43"}"/>`;
+      s += `<text x="${cx + bw / 2 + 2}" y="${H - B - h - 3}" text-anchor="middle" fill="#c9d2db" font-size="10">${Number(r.l).toFixed(1)}</text>`;
+    }
+    s += `<text x="${cx}" y="${H - 6}" text-anchor="middle" fill="#8b98a5" font-size="11">${dayLabel}</text>`;
+  });
+  el.innerHTML = s + `<line x1="0" x2="${W}" y1="${H - B}" y2="${H - B}" stroke="#2a333d"/>`;
+  let t = "<table><tr><th>Day</th><th>Solar</th><th>Load</th><th>Ah in</th><th>Ah out</th><th>Gen h</th></tr>";
+  [...days].reverse().forEach(r => {
+    t += `<tr><td>${r.d}</td><td>${r.s != null ? Number(r.s).toFixed(1) : "–"}</td><td>${r.l != null ? Number(r.l).toFixed(1) : "–"}</td><td>${r.ai ?? "–"}</td><td>${r.ao ?? "–"}</td><td>${r.gm ? (r.gm / 60).toFixed(1) : "–"}</td></tr>`;
+  });
+  $("et").innerHTML = t + "</table><div class='note'>*Load is an estimate and reads low on generator days.</div>";
+}
+
+function bhPanel(bh) {
+  bh = bh || {};
+  $("bhW").innerHTML = bh.fw ? `<div class="hint no">⚠️ No float in ${bh.fd != null ? bh.fd + " days" : "logged history"}. AGMs last longest when they reach float weekly.</div>` : "";
+  const C = "<small>collecting</small>";
+  const tiles = [
+    ["Capacity", bh.ca != null ? f0(bh.ca, "Ah") + `<div class="note" style="margin:0">${bh.cp ?? "?"}%</div>` : (bh.cs || C)],
+    ["Resistance", bh.rm != null ? f1(bh.rm, "mΩ") : C],
+    ["Efficiency", bh.ef != null ? f1(bh.ef, "%") : C],
+    ["Last float", bh.fo ? "<span style='color:var(--g)'>Now</span>" : (bh.fd != null ? f1(bh.fd, "days ago") : "--")],
+    ["Age", bh.ay != null ? bh.ay + " <small>yrs</small>" : "--"],
+    ["10-yr goal", bh.ag != null ? bh.ag + " <small>%</small>" : "--"],
+  ];
+  $("bh").innerHTML = tiles.map(t => `<div class="t"><div class="lbl">${t[0]}</div><div class="v" style="font-size:17px">${t[1]}</div></div>`).join("");
+}
+
+function piPanel(pi, snap) {
+  pi = pi || {};
+  const up = pi.up != null ? (pi.up >= 86400 ? Math.floor(pi.up / 86400) + "d " + Math.floor(pi.up % 86400 / 3600) + "h" : dur(pi.up)) : "--";
+  const net = pi.net ? `<span style="color:var(--g)">Online</span>${pi.ms != null ? " <small>" + pi.ms + " ms</small>" : ""}` : `<span style="color:var(--r)">Offline</span>`;
+  const wf = pi.dbm != null ? `${pi.dbm} <small>dBm · ${pi.wq ?? "?"}%</small>` : "--";
+  const tc = pi.c == null ? "--" : `<span style="color:${pi.c >= 75 ? "var(--r)" : pi.c >= 65 ? "var(--y)" : "inherit"}">${pi.c}</span> <small>°C</small>`;
+  const tiles = [
+    ["CPU temp", tc], ["Uptime", up], ["Starlink", net], ["Wi-Fi", wf],
+    ["Disk", pi.du != null ? pi.du + " <small>/ " + pi.dt + " GB</small>" : "--"],
+    ["Logger age", snap.age != null ? fmtAge(snap.age) : "--"],
+  ];
+  $("ph").innerHTML = tiles.map(t => `<div class="t"><div class="lbl">${t[0]}</div><div class="v" style="font-size:17px">${t[1]}</div></div>`).join("");
 }
 
 function render(snap, meta) {
   meta = meta || {};
   const age = snap.age != null ? snap.age : (snap.t ? (Date.now() / 1000 - snap.t) : null);
   const heard = $("heard");
+  const health = $("health");
   if (age == null) {
-    heard.textContent = "No status yet";
-    heard.className = "heard warn";
+    heard.textContent = "No status yet"; heard.className = "heard warn";
+    health.className = "pill warn"; health.textContent = "● No data";
   } else if (age > DEAD_MIN * 60) {
     heard.textContent = "Last heard from " + fmtAge(age) + " — Pi or Starlink may be down";
     heard.className = "heard bad";
+    health.className = "pill bad"; health.textContent = "● Stale " + Math.round(age / 60) + " min";
   } else if (age > 20 * 60) {
     heard.textContent = "Last heard from " + fmtAge(age);
     heard.className = "heard warn";
+    health.className = "pill warn"; health.textContent = "● " + Math.round(age / 60) + " min ago";
   } else {
-    heard.textContent = "Last heard from " + fmtAge(age) + (meta.offline ? " (cached)" : "");
+    heard.textContent = "Last heard from " + fmtAge(age) + (meta.offline ? " (cached)" : "") + (meta.mock ? " · mock" : "");
     heard.className = "heard";
+    health.className = "pill ok"; health.textContent = "● Live";
   }
   document.body.classList.toggle("offline", !!meta.offline);
 
   setGauge(snap.soc);
-  $("bv").innerHTML = (snap.bv != null ? snap.bv : "—") + ' <span class="u">V</span>';
-  $("pv").innerHTML = (snap.pv != null ? Math.round(snap.pv) : "—") + ' <span class="u">W</span>';
-  $("kwh").innerHTML = (snap.kwh != null ? snap.kwh : "—") + ' <span class="u">kWh</span>';
-  $("cst").textContent = snap.cst || "—";
-  $("stage").textContent = (snap.sc ? "Classic stale · " : "") + (snap.sw ? "Whizbang stale · " : "") + "Solar · away";
-  $("wa").textContent = snap.wa == null ? "—" : ((snap.wa >= 0 ? "+" : "") + snap.wa + " A");
-  $("a15").textContent = snap.a15 == null ? "15-min avg —" : ("15-min avg " + (snap.a15 >= 0 ? "+" : "") + snap.a15 + " A");
-  $("lw").textContent = snap.lw == null ? "—" : (Math.round(snap.lw) + " W");
-  $("rah").textContent = snap.rah == null ? "remaining —" : ("remaining " + snap.rah + " Ah");
+  $("bv").textContent = snap.bv != null ? Number(snap.bv).toFixed(1) : "--";
+  if (snap.wa != null) {
+    const a = snap.wa, e = $("amps");
+    e.textContent = (a >= 0 ? "+" : "") + Number(a).toFixed(1) + " A " + (a >= 0 ? "charging" : "using");
+    e.className = "big " + (a >= 0 ? "chg" : "dis");
+    e.style.fontSize = "20px";
+  } else $("amps").textContent = "--";
+  $("cst").textContent = snap.cst || "--";
+  $("pv").innerHTML = snap.pv != null ? Math.round(snap.pv) + " <small>W</small>" : "--";
+  $("pvv").innerHTML = f1(snap.pvv, "V");
+  $("rah").innerHTML = snap.rah != null ? snap.rah + " <small>Ah</small>" : "--";
+  $("kwh").innerHTML = f1(snap.kwh, "kWh");
 
+  runtimePanel(snap);
+  genPanel(snap);
+
+  const on = !!(snap.g && snap.g.on);
+  $("lw").innerHTML = snap.lw != null ? Math.round(snap.lw) + " <small style='font-size:16px;color:var(--mut)'>W</small>" : "--";
+  $("lw").className = "big" + (on ? " grey" : "");
+  $("la").textContent = snap.la != null ? "≈ " + Number(snap.la).toFixed(1) + " A" : "";
+  $("loadTag").textContent = on ? "reads low: generator on" : "estimate";
+  $("loadNote").innerHTML = (on ? "<b style='color:var(--y)'>Generator is charging, so this reads low.</b> " : "") +
+    "Estimate = Classic charger amps − battery net amps (Whizbang Jr), × battery volts.";
+  const td = (snap.d || [])[(snap.d || []).length - 1] || {};
+  $("loadK").innerHTML = f1(td.l, "kWh");
+  $("solK").innerHTML = f1(td.s != null ? td.s : snap.kwh, "kWh");
+
+  energyBars(snap.d);
   const h = snap.h || {};
-  sparkline($("sparkSoc"), h.s, "#3ccf7a", 60, 100);
-  sparkline($("sparkPv"), h.p, "#ff9f43", 0, null);
+  // SoC chart scaled 65–100 per Bj's preference
+  let socLo = 65;
+  if ((h.s || []).some(v => v != null && v < 65)) socLo = Math.min(...(h.s || []).filter(v => v != null));
+  sparkline($("cSoc"), h.s, "#3ccf7a", socLo, 100);
+  sparkline($("cAmps"), h.a, "#4aa8ff", null, null, true);
+  sparkline($("cLoad"), h.l, "#ff9f43", 0, null);
+  sparkline($("cPv"), h.p, "#f5c542", 0, null);
+  if (h.t && h.t.length) $("range").textContent = tf(h.t[0]) + " → " + tf(h.t[h.t.length - 1]);
+  else $("range").textContent = "";
 
-  const bh = snap.bh || {};
-  $("bhCap").textContent = bh.ca != null ? (bh.ca + " Ah (" + (bh.cp ?? "?") + "%)") : (bh.cs || "collecting");
-  $("bhR").textContent = bh.rm != null ? (bh.rm + " mΩ") : "collecting";
-  $("bhEff").textContent = bh.ef != null ? (bh.ef + "%") : "collecting";
-  const fl = $("bhFloat");
-  if (bh.fo) { fl.textContent = "in float now"; fl.className = ""; }
-  else if (bh.fd != null) { fl.textContent = bh.fd + " d"; fl.className = bh.fw ? "bad" : ""; }
-  else { fl.textContent = "—"; fl.className = ""; }
+  // merge finer series from multi-snapshot history if present
+  if (meta.series && meta.series.t && meta.series.t.length >= 2) {
+    const ser = meta.series;
+    sparkline($("cSoc"), ser.s, "#3ccf7a", Math.min(65, ...ser.s.filter(v => v != null)), 100);
+    sparkline($("cAmps"), ser.a, "#4aa8ff", null, null, true);
+    sparkline($("cLoad"), ser.l, "#ff9f43", 0, null);
+    if (ser.p && ser.p.some(v => v != null)) sparkline($("cPv"), ser.p, "#f5c542", 0, null);
+    $("range").textContent = tf(ser.t[0]) + " → " + tf(ser.t[ser.t.length - 1]) + " · from status posts";
+  }
+
+  bhPanel(snap.bh);
+  piPanel(snap.pi, snap);
 
   const ul = $("alerts");
   const al = snap.al || [];
   if (!al.length) ul.innerHTML = '<li><span class="when">No recent alerts in snapshot</span></li>';
-  else ul.innerHTML = al.map(a => `<li><span>${a.ti || a.k || "alert"}</span><span class="when">${fmtWhen(a.t)}</span></li>`).join("");
+  else ul.innerHTML = al.map(a => `<li><span>${a.ti || a.k || "alert"}</span><span class="when">${tf(a.t)}</span></li>`).join("");
 
   try { localStorage.setItem("chLastSnap", JSON.stringify({ snap, at: Date.now() })); } catch {}
 }
 
-async function fetchNtfyLatest(topic) {
+/* ---- Open-Meteo outlook + hunt (phone-side; no secrets) ---- */
+function sunTime(day, rising, lat = LAT, lon = LON) {
+  // day = Date at local noon-ish; returns Date in local
+  const r = x => x * Math.PI / 180;
+  const N = Math.floor((Date.UTC(day.getFullYear(), day.getMonth(), day.getDate()) - Date.UTC(day.getFullYear(), 0, 0)) / 86400000);
+  const lh = lon / 15;
+  const t = N + ((rising ? 6 : 18) - lh) / 24;
+  const M = 0.9856 * t - 3.289;
+  let L = (M + 1.916 * Math.sin(r(M)) + 0.020 * Math.sin(r(2 * M)) + 282.634) % 360;
+  let RA = Math.atan(0.91764 * Math.tan(r(L))) * 180 / Math.PI; RA = ((RA % 360) + 360) % 360;
+  RA = (RA + (Math.floor(L / 90) * 90 - Math.floor(RA / 90) * 90)) / 15;
+  const sd = 0.39782 * Math.sin(r(L)), cd = Math.cos(Math.asin(sd));
+  const ch = (Math.cos(r(90.833)) - sd * Math.sin(r(lat))) / (cd * Math.cos(r(lat)));
+  const H = ((rising ? 360 - Math.acos(ch) * 180 / Math.PI : Math.acos(ch) * 180 / Math.PI)) / 15;
+  const UT = (H + RA - 0.06571 * t - 6.622 - lh) % 24;
+  const base = Date.UTC(day.getFullYear(), day.getMonth(), day.getDate());
+  return new Date(base + ((UT + 24) % 24) * 3600000); // UTC instant; display via CT formatter
+}
+function solarFlag(sunH, rad) {
+  if (sunH == null && rad == null) return ["?", "unknown"];
+  if ((sunH != null && sunH < 2) || (rad != null && rad < 5)) return ["likely", "Generator likely needed"];
+  if ((sunH != null && sunH < 4) || (rad != null && rad < 9)) return ["maybe", "Maybe a generator run"];
+  return ["ok", "Solar should cover it"];
+}
+function sector(deg, lo, hi) { return deg != null && lo <= ((deg % 360) + 360) % 360 && ((deg % 360) + 360) % 360 < hi; }
+function huntHints(w, morning) {
+  const out = [];
+  if (morning) out.push(["no", "Jack's Park: never a morning pick"]);
+  if (!w) return out;
+  const d = w.dir;
+  if (sector(d, 292.5, 337.5)) out.unshift(["yes", "Panther Draw: NW wind — approach from the west via Panther Creek"]);
+  if (sector(d, 202.5, 247.5)) out.push(["info", "Panther Draw: SW is the blind side (your back)"]);
+  if (sector(d, 45, 135)) out.push(["no", "Galt's Gultch: out on an east wind"]);
+  if ((w.mph || 0) >= 8) out.push(["info", "8–10+ mph: wind rolls in the draws; direction is only a hint"]);
+  if ((w.rain_in || 0) >= 0.25 || (w.rain_pct || 0) >= 70) out.push(["no", "Heavy rain possible — no sitting in pouring rain"]);
+  return out;
+}
+function windowAvg(hours, t0, t1) {
+  const pts = hours.filter(h => h.t >= t0 && h.t <= t1);
+  if (!pts.length) return null;
+  let x = 0, y = 0;
+  pts.forEach(h => { if (h.spd != null && h.dir != null) { x += h.spd * Math.sin(h.dir * Math.PI / 180); y += h.spd * Math.cos(h.dir * Math.PI / 180); } });
+  const deg = (x || y) ? Math.round((Math.atan2(x, y) * 180 / Math.PI + 360) % 360) : null;
+  const sp = pts.map(h => h.spd).filter(v => v != null);
+  const gu = pts.map(h => h.gust).filter(v => v != null);
+  const pp = pts.map(h => h.pp).filter(v => v != null);
+  const pr = pts.map(h => h.pr).filter(v => v != null);
+  const tp = pts.map(h => h.temp).filter(v => v != null);
+  return {
+    dir: deg, dir_txt: compass(deg),
+    mph: sp.length ? Math.round(sp.reduce((a, b) => a + b, 0) / sp.length) : null,
+    gust: gu.length ? Math.round(Math.max(...gu)) : null,
+    rain_pct: pp.length ? Math.max(...pp) : null,
+    rain_in: pr.length ? Math.round(pr.reduce((a, b) => a + b, 0) * 100) / 100 : null,
+    temp: tp.length ? Math.round(tp.reduce((a, b) => a + b, 0) / tp.length) : null
+  };
+}
+function winHtml(title, o) {
+  const w = o.wind;
+  let s = `<div class="h"><b>${title}</b><span class="lbl">${hm(o.from)}–${hm(o.to)} CT</span></div>`;
+  s += w
+    ? `<div style="margin-top:6px;font-size:17px">${arrow(w.dir)} <b>${w.dir_txt}</b> ${w.mph ?? "--"} mph <span class="lbl">gust ${w.gust ?? "--"} · rain ${w.rain_pct ?? "--"}% · ${w.temp ?? "--"}°F</span></div>`
+    : `<div class="note">No forecast for this window</div>`;
+  const ic = { yes: "✓", no: "✗", info: "ℹ" };
+  const hints = (o.hints && o.hints.length) ? o.hints : [["info", "No stand rule for this wind. Wind shown only."]];
+  s += hints.map(h => `<div class="hint ${h[0]}">${ic[h[0]]} ${h[1]}</div>`).join("");
+  return s;
+}
+async function loadForecast() {
+  try {
+    const q = `https://api.open-meteo.com/v1/forecast?latitude=${LAT}&longitude=${LON}&timezone=America%2FChicago&forecast_days=4&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch&daily=cloud_cover_mean,sunshine_duration,shortwave_radiation_sum,precipitation_sum,precipitation_probability_max,temperature_2m_max,temperature_2m_min&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m,precipitation_probability,precipitation,temperature_2m`;
+    const r = await fetch(q);
+    if (!r.ok) throw new Error("meteo " + r.status);
+    const data = await r.json();
+    // outlook
+    const d = data.daily || {};
+    const today = new Date().toLocaleDateString("en-CA", TZO); // YYYY-MM-DD in CT
+    let html = "";
+    (d.time || []).forEach((ds, i) => {
+      if (ds < today) return;
+      const sunH = d.sunshine_duration?.[i] != null ? Math.round(d.sunshine_duration[i] / 360) / 10 : null;
+      const rad = d.shortwave_radiation_sum?.[i];
+      const [lvl, flag] = solarFlag(sunH, rad);
+      const delta = Math.round((new Date(ds + "T12:00:00") - new Date(today + "T12:00:00")) / 86400000);
+      const label = delta === 0 ? "Today" : delta === 1 ? "Tomorrow" : new Date(ds + "T12:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
+      html += `<div class="t"><div class="lbl">${label}</div><div class="v">${f1(sunH, "h sun")}</div>
+        <div class="note" style="margin-top:2px">☁️ ${d.cloud_cover_mean?.[i] ?? "--"}% · ${f1(rad)} MJ/m²<br>🌧️ ${d.precipitation_probability_max?.[i] ?? "--"}% · ${d.temperature_2m_max?.[i] != null ? Math.round(d.temperature_2m_max[i]) + "°/" + Math.round(d.temperature_2m_min[i]) + "°" : ""}</div>
+        <div class="flag ${lvl}">${flag}</div></div>`;
+    });
+    $("ol").innerHTML = html || `<div class="note">No forecast yet</div>`;
+    $("olAge").textContent = "updated " + hm(Date.now() / 1000) + " CT";
+
+    // hunt
+    const now = new Date();
+    let day = new Date(now.toLocaleString("en-US", { timeZone: "America/Chicago" }));
+    // use calendar date in CT
+    const ctParts = new Intl.DateTimeFormat("en-US", { ...TZO, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(now);
+    const Y = +ctParts.find(p => p.type === "year").value;
+    const M = +ctParts.find(p => p.type === "month").value;
+    const D = +ctParts.find(p => p.type === "day").value;
+    day = new Date(Y, M - 1, D, 12);
+    let rise = sunTime(day, true), sset = sunTime(day, false);
+    // if past shooting end, show tomorrow
+    const shootEnd = new Date(sset.getTime() + 30 * 60000);
+    let isToday = true;
+    if (now > shootEnd) {
+      day = new Date(Y, M - 1, D + 1, 12);
+      rise = sunTime(day, true); sset = sunTime(day, false);
+      isToday = false;
+    }
+    const s0 = new Date(rise.getTime() - 30 * 60000);
+    const s1 = new Date(sset.getTime() + 30 * 60000);
+    $("hSr").textContent = hm(rise.getTime() / 1000);
+    $("hSs").textContent = hm(sset.getTime() / 1000);
+    $("hS0").textContent = hm(s0.getTime() / 1000);
+    $("hS1").textContent = hm(s1.getTime() / 1000);
+    const n = Date.now() / 1000;
+    let st = n < s0.getTime() / 1000 ? "Shooting light starts in " + dur(s0.getTime() / 1000 - n)
+      : n <= s1.getTime() / 1000 ? "<b style='color:var(--g)'>Legal shooting light now</b>, " + dur(s1.getTime() / 1000 - n) + " left"
+      : "Shooting light is over for today";
+    if (!isToday) st = "Showing tomorrow. " + st;
+    $("hNow").innerHTML = st;
+
+    const hrs = [];
+    const h = data.hourly || {};
+    (h.time || []).forEach((ts, i) => {
+      // ts like 2026-11-09T14:00 — treat as CT wall time → approx unix via Date parse as local is wrong; use Z-less as CT offset
+      const t = Date.parse(ts + ":00-06:00") / 1000; // CST approx; DST handled poorly but fine for wind windows
+      hrs.push({
+        t, spd: h.wind_speed_10m?.[i], dir: h.wind_direction_10m?.[i], gust: h.wind_gusts_10m?.[i],
+        pp: h.precipitation_probability?.[i], pr: h.precipitation?.[i], temp: h.temperature_2m?.[i]
+      });
+    });
+    // better: use America/Chicago offset for today
+    const m = windowAvg(hrs, s0.getTime() / 1000 - 1800, s0.getTime() / 1000 + 3 * 3600);
+    const e = windowAvg(hrs, sset.getTime() / 1000 - 3 * 3600, s1.getTime() / 1000 + 1800);
+    $("hM").innerHTML = winHtml("🌅 Morning sit", { from: s0.getTime() / 1000, to: s0.getTime() / 1000 + 3 * 3600, wind: m, hints: huntHints(m, true) });
+    $("hE").innerHTML = winHtml("🌇 Evening sit", { from: sset.getTime() / 1000 - 3 * 3600, to: s1.getTime() / 1000, wind: e, hints: huntHints(e, false) });
+    $("hAge").textContent = "updated " + hm(Date.now() / 1000) + " CT";
+  } catch (e) {
+    $("ol").innerHTML = `<div class="note">Forecast offline (${e.message || e})</div>`;
+    $("hNow").textContent = "Hunt forecast offline";
+  }
+}
+
+function seriesFromMessages(msgs) {
+  // msgs: array of parsed snapshots oldest→newest
+  const t = [], s = [], a = [], l = [], p = [];
+  msgs.forEach(snap => {
+    if (!snap || snap.t == null) return;
+    t.push(snap.t); s.push(snap.soc); a.push(snap.wa); l.push(snap.lw); p.push(snap.pv);
+  });
+  return { t, s, a, l, p };
+}
+
+async function fetchNtfyMessages(topic) {
   const url = topicUrl(topic, "/json?poll=1&since=24h");
   const r = await fetch(url);
   if (!r.ok) throw new Error("ntfy " + r.status);
   const text = await r.text();
-  let latest = null;
+  const msgs = [];
   for (const line of text.split("\n")) {
     if (!line.trim()) continue;
     try {
       const msg = JSON.parse(line);
-      if (msg.event === "message" && msg.message) latest = msg;
+      if (msg.event === "message" && msg.message) msgs.push(msg);
     } catch {}
   }
-  return latest;
+  return msgs;
 }
 
 async function refresh() {
   $("banner").classList.remove("show");
   try {
-    let snap;
+    let snap, series = null;
     if (MOCK) {
       const r = await fetch("mock-snapshot.json");
       snap = await r.json();
-      // pretend it's fresh
       snap.t = Math.floor(Date.now() / 1000);
       snap.age = 40;
       render(snap, { offline: false, mock: true });
       $("foot").textContent = "Mock mode (?mock=1). Not talking to ntfy.";
+      loadForecast();
       return;
     }
-    const msg = await fetchNtfyLatest(CFG.dataTopic);
-    if (!msg) throw new Error("no cached status yet");
-    snap = JSON.parse(msg.message);
-    // prefer ntfy message time if snapshot age missing
-    if (snap.age == null && msg.time) snap.age = Date.now() / 1000 - msg.time;
-    render(snap);
-
-    // optional: merge alert topic titles (best-effort, ignore failures)
-    try {
-      const am = await fetchNtfyLatest(CFG.alertTopic);
-      // already have alerts in snapshot; skip merge to keep UI simple
-    } catch {}
+    if (!CFG.dataTopic) { openSettings(); return; }
+    const msgs = await fetchNtfyMessages(CFG.dataTopic);
+    if (!msgs.length) throw new Error("no cached status yet");
+    const snaps = [];
+    msgs.forEach(m => {
+      try { snaps.push(JSON.parse(m.message)); } catch {}
+    });
+    snap = snaps[snaps.length - 1];
+    if (!snap) throw new Error("no cached status yet");
+    if (snap.age == null && msgs[msgs.length - 1].time) snap.age = Date.now() / 1000 - msgs[msgs.length - 1].time;
+    if (snaps.length >= 2) series = seriesFromMessages(snaps);
+    render(snap, { series });
+    loadForecast();
   } catch (e) {
     const cached = localStorage.getItem("chLastSnap");
     if (cached) {
       try {
-        const { snap, at } = JSON.parse(cached);
+        const { snap } = JSON.parse(cached);
         if (snap.t) snap.age = Date.now() / 1000 - snap.t;
         render(snap, { offline: true });
         $("banner").textContent = "Showing last cached snapshot (" + (e.message || "offline") + ")";
@@ -440,6 +816,7 @@ async function refresh() {
     }
     $("heard").textContent = "Could not reach ntfy (" + (e.message || e) + ")";
     $("heard").className = "heard bad";
+    $("health").className = "pill bad"; $("health").textContent = "● Offline";
     $("banner").textContent = topicDbg() + " — Check Settings topics, or open with ?mock=1 to preview.";
     $("banner").classList.add("show");
   }
@@ -450,9 +827,8 @@ async function checkin() {
   btn.disabled = true; btn.textContent = "Asking Pi…";
   try {
     if (MOCK) {
-      await new Promise(r => setTimeout(r, 800));
-      btn.textContent = "Check in";
-      btn.disabled = false;
+      await new Promise(r => setTimeout(r, 600));
+      btn.textContent = "Check in"; btn.disabled = false;
       $("banner").textContent = "Mock check-in: Pi would reply on the alert topic in a few seconds.";
       $("banner").classList.add("show");
       return;
