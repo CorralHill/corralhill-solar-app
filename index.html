@@ -199,7 +199,42 @@ function loadSettings() {
 function saveSettings(s) {
   localStorage.setItem("chSettings", JSON.stringify(s));
 }
+function b64urlDecode(s) {
+  const b64 = String(s).replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+  // atob is fine for ASCII topic names
+  return atob(pad);
+}
+function applySetupFromHash() {
+  const h = (location.hash || "").replace(/^#/, "");
+  if (!h) return false;
+  let d = "", a = "", c = "";
+  try {
+    if (h.startsWith("setup=")) {
+      const json = JSON.parse(b64urlDecode(h.slice(6)));
+      d = json.d || json.dataTopic || "";
+      a = json.a || json.alertTopic || "";
+      c = json.c || json.cmdTopic || "";
+    } else {
+      const sp = new URLSearchParams(h);
+      d = sp.get("d") || sp.get("dataTopic") || "";
+      a = sp.get("a") || sp.get("alertTopic") || "";
+      c = sp.get("c") || sp.get("cmdTopic") || "";
+    }
+  } catch (e) {
+    return false;
+  }
+  d = String(d).trim(); a = String(a).trim(); c = String(c).trim();
+  if (!d || !a || !c) return false;
+  CFG = { ...CFG, dataTopic: d, alertTopic: a, cmdTopic: c };
+  saveSettings(CFG);
+  try {
+    history.replaceState(null, "", location.pathname + location.search);
+  } catch (e) {}
+  return true;
+}
 let CFG = loadSettings();
+applySetupFromHash();
 
 function topicUrl(topic, path) {
   const t = (topic || "").replace(/^https?:\/\/[^/]+\//, "").replace(/\/$/, "");
