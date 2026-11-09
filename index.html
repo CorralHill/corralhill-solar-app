@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0c1016">
+<title>Corral Hill</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<style>
+:root {
+  --bg: #0c1016; --card: #151b24; --line: #243042; --text: #e8eef6; --muted: #8b9bb0;
+  --green: #3ccf7a; --yellow: #e6b84d; --red: #ef5b5b; --blue: #4aa8ff; --orange: #ff9f43;
+  --pad: max(16px, env(safe-area-inset-left));
+  --padr: max(16px, env(safe-area-inset-right));
+  --padt: max(12px, env(safe-area-inset-top));
+  --padb: max(20px, env(safe-area-inset-bottom));
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
+  font: 16px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100%; }
+body { padding: var(--padt) var(--padr) var(--padb) var(--pad); }
+header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+h1 { font-size: 18px; font-weight: 650; margin: 0; letter-spacing: 0.2px; }
+.sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+.iconbtn { background: var(--card); border: 1px solid var(--line); color: var(--text);
+  border-radius: 12px; width: 40px; height: 40px; font-size: 18px; }
+.heard { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+.heard.bad { color: var(--red); font-weight: 600; }
+.heard.warn { color: var(--yellow); }
+.gauge-wrap { display: flex; gap: 14px; align-items: center; background: var(--card);
+  border: 1px solid var(--line); border-radius: 18px; padding: 18px; margin-bottom: 12px; }
+.gauge { position: relative; width: 132px; height: 132px; flex: 0 0 auto; }
+.gauge svg { width: 132px; height: 132px; transform: rotate(-90deg); }
+.gauge .bg { stroke: #243042; }
+.gauge .fg { stroke-linecap: round; transition: stroke-dashoffset .4s ease, stroke .3s; }
+.gauge .center { position: absolute; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; }
+.gauge .soc { font-size: 34px; font-weight: 700; line-height: 1; }
+.gauge .unit { font-size: 12px; color: var(--muted); margin-top: 2px; }
+.vitals { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; }
+.vital .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .4px; }
+.vital .v { font-size: 20px; font-weight: 650; margin-top: 2px; }
+.vital .u { font-size: 12px; color: var(--muted); font-weight: 500; }
+.row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; }
+.card h2 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 600;
+  text-transform: uppercase; letter-spacing: .4px; }
+.spark { width: 100%; height: 56px; display: block; }
+.meta { font-size: 12px; color: var(--muted); margin-top: 6px; }
+.bh-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; font-size: 14px; }
+.bh-grid .k { color: var(--muted); font-size: 12px; }
+.bh-grid .bad { color: var(--yellow); }
+.alerts { list-style: none; margin: 0; padding: 0; }
+.alerts li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0;
+  border-top: 1px solid var(--line); font-size: 14px; }
+.alerts li:first-child { border-top: 0; padding-top: 0; }
+.alerts .when { color: var(--muted); font-size: 12px; white-space: nowrap; }
+.actions { display: flex; gap: 10px; margin: 14px 0 8px; }
+button.primary { flex: 1; background: var(--green); color: #062314; border: 0; border-radius: 14px;
+  padding: 14px; font-size: 16px; font-weight: 700; }
+button.primary:disabled { opacity: .55; }
+button.ghost { background: var(--card); color: var(--text); border: 1px solid var(--line);
+  border-radius: 14px; padding: 14px 16px; font-size: 15px; font-weight: 600; }
+.note { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.banner { background: #2a1a1a; border: 1px solid #5a2a2a; color: #ffb4b4; border-radius: 12px;
+  padding: 10px 12px; font-size: 13px; margin-bottom: 12px; display: none; }
+.banner.show { display: block; }
+/* settings sheet */
+#settings { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.55); z-index: 20;
+  padding: var(--padt) var(--padr) var(--padb) var(--pad); }
+#settings.open { display: flex; align-items: flex-end; }
+#settings .sheet { background: var(--card); border: 1px solid var(--line); border-radius: 18px 18px 12px 12px;
+  padding: 18px; width: 100%; max-height: 90%; overflow: auto; }
+#settings h2 { margin: 0 0 12px; font-size: 18px; }
+label { display: block; font-size: 12px; color: var(--muted); margin: 10px 0 4px; }
+input[type=text], input[type=number] { width: 100%; background: var(--bg); border: 1px solid var(--line);
+  color: var(--text); border-radius: 10px; padding: 12px; font-size: 15px; }
+.sheet .actions { margin-top: 16px; }
+.offline { opacity: .85; }
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Corral Hill</h1>
+    <div class="sub" id="stage">Solar · away</div>
+  </div>
+  <button class="iconbtn" id="btnSettings" aria-label="Settings" title="Settings">⚙</button>
+</header>
+
+<div class="banner" id="banner"></div>
+<div class="heard" id="heard">Loading…</div>
+
+<div class="gauge-wrap">
+  <div class="gauge">
+    <svg viewBox="0 0 120 120" aria-hidden="true">
+      <circle class="bg" cx="60" cy="60" r="52" fill="none" stroke-width="10"></circle>
+      <circle class="fg" id="ring" cx="60" cy="60" r="52" fill="none" stroke-width="10"
+              stroke="#3ccf7a" stroke-dasharray="326.73" stroke-dashoffset="326.73"></circle>
+    </svg>
+    <div class="center">
+      <div class="soc" id="soc">—</div>
+      <div class="unit">SoC</div>
+    </div>
+  </div>
+  <div class="vitals">
+    <div class="vital"><div class="k">Battery</div><div class="v" id="bv">— <span class="u">V</span></div></div>
+    <div class="vital"><div class="k">Solar</div><div class="v" id="pv">— <span class="u">W</span></div></div>
+    <div class="vital"><div class="k">Today</div><div class="v" id="kwh">— <span class="u">kWh</span></div></div>
+    <div class="vital"><div class="k">Stage</div><div class="v" id="cst">—</div></div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="card">
+    <h2>Net amps</h2>
+    <div class="v" id="wa" style="font-size:22px;font-weight:650">—</div>
+    <div class="meta" id="a15">15-min avg —</div>
+  </div>
+  <div class="card">
+    <h2>Load / bank</h2>
+    <div class="v" id="lw" style="font-size:22px;font-weight:650">—</div>
+    <div class="meta" id="rah">remaining —</div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:12px">
+  <h2>Last 24 h · SoC</h2>
+  <svg class="spark" id="sparkSoc" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
+  <h2 style="margin-top:12px">Last 24 h · PV W</h2>
+  <svg class="spark" id="sparkPv" viewBox="0 0 300 56" preserveAspectRatio="none"></svg>
+</div>
+
+<div class="card" style="margin-bottom:12px">
+  <h2>Battery health</h2>
+  <div class="bh-grid" id="bh">
+    <div><div class="k">Capacity</div><div id="bhCap">—</div></div>
+    <div><div class="k">Resistance</div><div id="bhR">—</div></div>
+    <div><div class="k">Efficiency</div><div id="bhEff">—</div></div>
+    <div><div class="k">Days since float</div><div id="bhFloat">—</div></div>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:12px">
+  <h2>Recent alerts</h2>
+  <ul class="alerts" id="alerts"><li><span class="when">No alerts yet</span></li></ul>
+</div>
+
+<div class="actions">
+  <button class="primary" id="btnCheckin">Check in</button>
+  <button class="ghost" id="btnRefresh">Refresh</button>
+</div>
+<div class="note" id="foot">Pulls a quiet status from ntfy every few minutes. Alerts still come through the ntfy app.</div>
+
+<div id="settings">
+  <div class="sheet">
+    <h2>Settings</h2>
+    <p class="note">Topics are like passwords. Defaults match the Pi's pi.env.new-keys. Nothing else is baked into the app.</p>
+    <label for="dataTopic">Data topic (status feed)</label>
+    <input id="dataTopic" type="text" autocomplete="off" spellcheck="false" placeholder="corralhill-data-…">
+    <label for="alertTopic">Alert topic (history)</label>
+    <input id="alertTopic" type="text" autocomplete="off" spellcheck="false" placeholder="corralhill-…">
+    <label for="cmdTopic">Command topic (check-in)</label>
+    <input id="cmdTopic" type="text" autocomplete="off" spellcheck="false" placeholder="corralhill-cmd-…">
+    <label for="pollMin">Refresh every (minutes)</label>
+    <input id="pollMin" type="number" min="1" max="60" value="5">
+    <div class="actions">
+      <button class="primary" id="btnSave">Save</button>
+      <button class="ghost" id="btnClose">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS = {
+  dataTopic: "",
+  alertTopic: "",
+  cmdTopic: "",
+  pollMin: 5,
+  ntfyBase: "https://ntfy.sh"
+};
+const DEAD_MIN = 45;
+const CIRC = 2 * Math.PI * 52;
+
+const $ = (id) => document.getElementById(id);
+const params = new URLSearchParams(location.search);
+const MOCK = params.has("mock") || location.protocol === "file:";
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem("chSettings") || "{}");
+    return Object.assign({}, DEFAULTS, s);
+  } catch { return Object.assign({}, DEFAULTS); }
+}
+function saveSettings(s) {
+  localStorage.setItem("chSettings", JSON.stringify(s));
+}
+let CFG = loadSettings();
+
+function topicUrl(topic, path) {
+  const t = (topic || "").replace(/^https?:\/\/[^/]+\//, "").replace(/\/$/, "");
+  return `${CFG.ntfyBase}/${t}${path || ""}`;
+}
+
+function fmtAge(sec) {
+  if (sec == null || isNaN(sec)) return "—";
+  if (sec < 60) return Math.round(sec) + "s ago";
+  if (sec < 3600) return Math.round(sec / 60) + " min ago";
+  if (sec < 86400) return (sec / 3600).toFixed(1) + " h ago";
+  return (sec / 86400).toFixed(1) + " d ago";
+}
+function fmtWhen(ts) {
+  try {
+    return new Date(ts * 1000).toLocaleString("en-US", {
+      timeZone: "America/Chicago", month: "short", day: "numeric",
+      hour: "numeric", minute: "2-digit"
+    }) + " CT";
+  } catch { return ""; }
+}
+function socColor(soc) {
+  if (soc == null) return "#8b9bb0";
+  if (soc <= 65) return "#ef5b5b";
+  if (soc <= 70) return "#e6b84d";
+  return "#3ccf7a";
+}
+
+function setGauge(soc) {
+  const ring = $("ring");
+  const pct = Math.max(0, Math.min(100, soc == null ? 0 : soc)) / 100;
+  ring.style.stroke = socColor(soc);
+  ring.setAttribute("stroke-dashoffset", String(CIRC * (1 - pct)));
+  $("soc").textContent = soc == null ? "—" : String(Math.round(soc));
+  $("soc").style.color = socColor(soc);
+}
+
+function sparkline(svg, values, color, minY, maxY) {
+  const nums = (values || []).map(v => (v == null ? null : Number(v)));
+  const known = nums.filter(v => v != null);
+  svg.innerHTML = "";
+  if (known.length < 2) {
+    svg.innerHTML = `<text x="8" y="32" fill="#8b9bb0" font-size="11">collecting…</text>`;
+    return;
+  }
+  const lo = minY != null ? minY : Math.min(...known);
+  const hi = maxY != null ? maxY : Math.max(...known);
+  const span = Math.max(1e-6, hi - lo);
+  const w = 300, h = 56, pad = 4;
+  const n = nums.length;
+  let d = "";
+  nums.forEach((v, i) => {
+    if (v == null) return;
+    const x = pad + (i / (n - 1)) * (w - 2 * pad);
+    const y = h - pad - ((v - lo) / span) * (h - 2 * pad);
+    d += (d ? " L" : "M") + x.toFixed(1) + " " + y.toFixed(1);
+  });
+  // area fill
+  const first = nums.findIndex(v => v != null);
+  const last = n - 1 - [...nums].reverse().findIndex(v => v != null);
+  const x0 = pad + (first / (n - 1)) * (w - 2 * pad);
+  const x1 = pad + (last / (n - 1)) * (w - 2 * pad);
+  const area = d + ` L${x1} ${h - pad} L${x0} ${h - pad} Z`;
+  svg.innerHTML = `<path d="${area}" fill="${color}" opacity="0.18"></path>
+    <path d="${d}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"></path>`;
+}
+
+function render(snap, meta) {
+  meta = meta || {};
+  const age = snap.age != null ? snap.age : (snap.t ? (Date.now() / 1000 - snap.t) : null);
+  const heard = $("heard");
+  if (age == null) {
+    heard.textContent = "No status yet";
+    heard.className = "heard warn";
+  } else if (age > DEAD_MIN * 60) {
+    heard.textContent = "Last heard from " + fmtAge(age) + " — Pi or Starlink may be down";
+    heard.className = "heard bad";
+  } else if (age > 20 * 60) {
+    heard.textContent = "Last heard from " + fmtAge(age);
+    heard.className = "heard warn";
+  } else {
+    heard.textContent = "Last heard from " + fmtAge(age) + (meta.offline ? " (cached)" : "");
+    heard.className = "heard";
+  }
+  document.body.classList.toggle("offline", !!meta.offline);
+
+  setGauge(snap.soc);
+  $("bv").innerHTML = (snap.bv != null ? snap.bv : "—") + ' <span class="u">V</span>';
+  $("pv").innerHTML = (snap.pv != null ? Math.round(snap.pv) : "—") + ' <span class="u">W</span>';
+  $("kwh").innerHTML = (snap.kwh != null ? snap.kwh : "—") + ' <span class="u">kWh</span>';
+  $("cst").textContent = snap.cst || "—";
+  $("stage").textContent = (snap.sc ? "Classic stale · " : "") + (snap.sw ? "Whizbang stale · " : "") + "Solar · away";
+  $("wa").textContent = snap.wa == null ? "—" : ((snap.wa >= 0 ? "+" : "") + snap.wa + " A");
+  $("a15").textContent = snap.a15 == null ? "15-min avg —" : ("15-min avg " + (snap.a15 >= 0 ? "+" : "") + snap.a15 + " A");
+  $("lw").textContent = snap.lw == null ? "—" : (Math.round(snap.lw) + " W");
+  $("rah").textContent = snap.rah == null ? "remaining —" : ("remaining " + snap.rah + " Ah");
+
+  const h = snap.h || {};
+  sparkline($("sparkSoc"), h.s, "#3ccf7a", 60, 100);
+  sparkline($("sparkPv"), h.p, "#ff9f43", 0, null);
+
+  const bh = snap.bh || {};
+  $("bhCap").textContent = bh.ca != null ? (bh.ca + " Ah (" + (bh.cp ?? "?") + "%)") : (bh.cs || "collecting");
+  $("bhR").textContent = bh.rm != null ? (bh.rm + " mΩ") : "collecting";
+  $("bhEff").textContent = bh.ef != null ? (bh.ef + "%") : "collecting";
+  const fl = $("bhFloat");
+  if (bh.fo) { fl.textContent = "in float now"; fl.className = ""; }
+  else if (bh.fd != null) { fl.textContent = bh.fd + " d"; fl.className = bh.fw ? "bad" : ""; }
+  else { fl.textContent = "—"; fl.className = ""; }
+
+  const ul = $("alerts");
+  const al = snap.al || [];
+  if (!al.length) ul.innerHTML = '<li><span class="when">No recent alerts in snapshot</span></li>';
+  else ul.innerHTML = al.map(a => `<li><span>${a.ti || a.k || "alert"}</span><span class="when">${fmtWhen(a.t)}</span></li>`).join("");
+
+  try { localStorage.setItem("chLastSnap", JSON.stringify({ snap, at: Date.now() })); } catch {}
+}
+
+async function fetchNtfyLatest(topic) {
+  const url = topicUrl(topic, "/json?poll=1&since=24h");
+  const r = await fetch(url);
+  if (!r.ok) throw new Error("ntfy " + r.status);
+  const text = await r.text();
+  let latest = null;
+  for (const line of text.split("\n")) {
+    if (!line.trim()) continue;
+    try {
+      const msg = JSON.parse(line);
+      if (msg.event === "message" && msg.message) latest = msg;
+    } catch {}
+  }
+  return latest;
+}
+
+async function refresh() {
+  $("banner").classList.remove("show");
+  try {
+    let snap;
+    if (MOCK) {
+      const r = await fetch("mock-snapshot.json");
+      snap = await r.json();
+      // pretend it's fresh
+      snap.t = Math.floor(Date.now() / 1000);
+      snap.age = 40;
+      render(snap, { offline: false, mock: true });
+      $("foot").textContent = "Mock mode (?mock=1). Not talking to ntfy.";
+      return;
+    }
+    const msg = await fetchNtfyLatest(CFG.dataTopic);
+    if (!msg) throw new Error("no cached status yet");
+    snap = JSON.parse(msg.message);
+    // prefer ntfy message time if snapshot age missing
+    if (snap.age == null && msg.time) snap.age = Date.now() / 1000 - msg.time;
+    render(snap);
+
+    // optional: merge alert topic titles (best-effort, ignore failures)
+    try {
+      const am = await fetchNtfyLatest(CFG.alertTopic);
+      // already have alerts in snapshot; skip merge to keep UI simple
+    } catch {}
+  } catch (e) {
+    const cached = localStorage.getItem("chLastSnap");
+    if (cached) {
+      try {
+        const { snap, at } = JSON.parse(cached);
+        if (snap.t) snap.age = Date.now() / 1000 - snap.t;
+        render(snap, { offline: true });
+        $("banner").textContent = "Showing last cached snapshot (" + (e.message || "offline") + ")";
+        $("banner").classList.add("show");
+        return;
+      } catch {}
+    }
+    $("heard").textContent = "Could not reach ntfy (" + (e.message || e) + ")";
+    $("heard").className = "heard bad";
+    $("banner").textContent = "Check Settings topics, or open with ?mock=1 to preview.";
+    $("banner").classList.add("show");
+  }
+}
+
+async function checkin() {
+  const btn = $("btnCheckin");
+  btn.disabled = true; btn.textContent = "Asking Pi…";
+  try {
+    if (MOCK) {
+      await new Promise(r => setTimeout(r, 800));
+      btn.textContent = "Check in";
+      btn.disabled = false;
+      $("banner").textContent = "Mock check-in: Pi would reply on the alert topic in a few seconds.";
+      $("banner").classList.add("show");
+      return;
+    }
+    const url = topicUrl(CFG.cmdTopic);
+    const r = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain", "Title": "status", "Priority": "min" },
+      body: "status"
+    });
+    if (!r.ok) throw new Error("ntfy " + r.status);
+    btn.textContent = "Waiting…";
+    setTimeout(async () => { await refresh(); btn.textContent = "Check in"; btn.disabled = false; }, 30000);
+  } catch (e) {
+    $("banner").textContent = "Check-in failed: " + (e.message || e);
+    $("banner").classList.add("show");
+    btn.textContent = "Check in"; btn.disabled = false;
+  }
+}
+
+function openSettings() {
+  $("dataTopic").value = CFG.dataTopic;
+  $("alertTopic").value = CFG.alertTopic;
+  $("cmdTopic").value = CFG.cmdTopic;
+  $("pollMin").value = CFG.pollMin;
+  $("settings").classList.add("open");
+}
+function closeSettings() { $("settings").classList.remove("open"); }
+function applySettings() {
+  CFG = {
+    ...CFG,
+    dataTopic: $("dataTopic").value.trim(),
+    alertTopic: $("alertTopic").value.trim(),
+    cmdTopic: $("cmdTopic").value.trim(),
+    pollMin: Math.max(1, Math.min(60, Number($("pollMin").value) || 5))
+  };
+  saveSettings(CFG);
+  closeSettings();
+  schedule();
+  refresh();
+}
+
+let timer = null;
+function schedule() {
+  if (timer) clearInterval(timer);
+  timer = setInterval(refresh, CFG.pollMin * 60 * 1000);
+}
+
+$("btnSettings").onclick = openSettings;
+$("btnClose").onclick = closeSettings;
+$("btnSave").onclick = applySettings;
+$("btnRefresh").onclick = refresh;
+$("btnCheckin").onclick = checkin;
+$("settings").addEventListener("click", (e) => { if (e.target.id === "settings") closeSettings(); });
+
+if ("serviceWorker" in navigator && location.protocol !== "file:") {
+  navigator.serviceWorker.register("./sw.js").catch(() => {});
+}
+
+if (!MOCK && !CFG.dataTopic) { openSettings(); } else { refresh(); }
+schedule();
+document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+</script>
+</body>
+</html>
