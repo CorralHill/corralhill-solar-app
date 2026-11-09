@@ -1,5 +1,5 @@
 /* Corral Hill PWA service worker: cache shell + last snapshot for offline. */
-const CACHE = "ch-shell-v5";
+const CACHE = "ch-shell-v6";
 const SHELL = [
   "./",
   "./index.html",

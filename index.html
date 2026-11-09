@@ -8,7 +8,19 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f1419">
 <title>Corral Hill Power</title>
-<link rel="manifest" href="manifest.webmanifest">
+<script>
+/* Inject web app manifest only when no setup payload is in the URL.
+   With ?setup= / #setup=, omit the manifest so iOS Add to Home Screen
+   uses the current full document URL (query survives; hash does not). */
+(function () {
+  try {
+    var q = location.search || "";
+    var h = location.hash || "";
+    if (q.indexOf("setup=") !== -1 || h.indexOf("setup=") !== -1) return;
+    document.write('<link rel="manifest" href="manifest.webmanifest">');
+  } catch (e) {}
+})();
+</script>
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <style>
 :root{
@@ -224,6 +236,7 @@ input[type=text],input[type=number]{width:100%;background:var(--bg);border:1px s
     <h2>Settings</h2>
     <p class="note">Topics are like passwords. Enter the three from the Pi's pi.env. Nothing else is baked into the public app.</p>
     <p class="note">Home Screen copy: add it from the setup link page.</p>
+    <p class="note" id="hsNote" style="display:none;color:var(--y)">Open the setup link in Safari, then Add to Home Screen from that page.</p>
     <label for="dataTopic">Data topic (status feed)</label>
     <input id="dataTopic" type="text" autocomplete="off" spellcheck="false" placeholder="corralhill-data-…">
     <label for="alertTopic">Alert topic (history)</label>
@@ -277,6 +290,56 @@ function topicDbg() {
     + "' cmd starts '" + c.slice(0, 12)
     + "' base=" + (CFG.ntfyBase || "");
 }
+function b64urlEncode(s) {
+  const b64 = btoa(unescape(encodeURIComponent(String(s))));
+  return b64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+function b64urlDecode(s) {
+  const b64 = String(s).replace(/-/g, "+").replace(/_/g, "/");
+  const pad = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
+  return atob(pad);
+}
+function persistExtras(out) {
+  try {
+    const payload = b64urlEncode(JSON.stringify({
+      dataTopic: out.dataTopic,
+      alertTopic: out.alertTopic,
+      cmdTopic: out.cmdTopic,
+      pollMin: out.pollMin,
+      ntfyBase: out.ntfyBase
+    }));
+    document.cookie = "chCfg=" + payload + "; Max-Age=31536000; Path=/; SameSite=Lax";
+  } catch (e) {}
+  try {
+    if ("caches" in window) {
+      caches.open("ch-config").then((c) =>
+        c.put("/__cfg", new Response(JSON.stringify(out), {
+          headers: { "Content-Type": "application/json" }
+        }))
+      ).catch(() => {});
+    }
+  } catch (e) {}
+}
+function readCookieCfg() {
+  try {
+    const m = document.cookie.match(/(?:^|;\s*)chCfg=([^;]+)/);
+    if (!m) return null;
+    const obj = JSON.parse(b64urlDecode(decodeURIComponent(m[1])));
+    if (!obj || !normalizeTopic(obj.dataTopic)) return null;
+    return obj;
+  } catch { return null; }
+}
+async function readCacheCfg() {
+  try {
+    if (!("caches" in window)) return null;
+    const c = await caches.open("ch-config");
+    const r = await c.match("/__cfg");
+    if (!r) return null;
+    const obj = await r.json();
+    if (!obj || !normalizeTopic(obj.dataTopic)) return null;
+    return obj;
+  } catch { return null; }
+}
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem("chSettings") || "{}");
@@ -295,42 +358,53 @@ function saveSettings(s) {
   out.cmdTopic = normalizeTopic(out.cmdTopic);
   if (out.ntfyBase) out.ntfyBase = String(out.ntfyBase).trim().replace(/\/+$/, "");
   localStorage.setItem("chSettings", JSON.stringify(out));
-}
-function b64urlDecode(s) {
-  const b64 = String(s).replace(/-/g, "+").replace(/_/g, "/");
-  const pad = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
-  return atob(pad);
+  persistExtras(out);
 }
 function preferDocumentUrlForHomeScreen() {
-  /* iOS Add to Home Screen uses the document URL (incl. query) when no web
-     app manifest is present. Keep apple-mobile-web-app-* + touch icon so
-     the home-screen copy still launches standalone with the right name/icon.
-     Query (?setup=) survives Add to Home Screen; #hash does not on iOS. */
+  /* Safety no-op: head script already omits the manifest when setup is present.
+     Still strip any injected link if JS later re-runs against a setup URL. */
   try {
     document.querySelectorAll('link[rel="manifest"]').forEach((el) => el.remove());
   } catch (e) {}
+}
+async function restoreSettingsIfNeeded() {
+  if (normalizeTopic(CFG.dataTopic)) return false;
+  let src = readCookieCfg();
+  if (!src) src = await readCacheCfg();
+  if (!src) return false;
+  CFG = {
+    ...CFG,
+    dataTopic: normalizeTopic(src.dataTopic),
+    alertTopic: normalizeTopic(src.alertTopic),
+    cmdTopic: normalizeTopic(src.cmdTopic),
+    pollMin: src.pollMin || CFG.pollMin,
+    ntfyBase: src.ntfyBase || CFG.ntfyBase
+  };
+  saveSettings(CFG);
+  return true;
 }
 function parseSetupPayload(raw) {
   let d = "", a = "", c = "";
   if (!raw) return null;
   try {
-    if (raw.startsWith("setup=")) {
-      const json = JSON.parse(b64urlDecode(raw.slice(6)));
+    /* Always prefer URLSearchParams so ?setup=XXX&mock=1 does not bleed into b64. */
+    const asQuery = raw.startsWith("?") || raw.includes("=") ? (raw.startsWith("?") ? raw.slice(1) : raw) : "";
+    const sp = new URLSearchParams(asQuery.replace(/^#/, ""));
+    if (sp.has("setup")) {
+      const json = JSON.parse(b64urlDecode(sp.get("setup")));
+      d = json.d || json.dataTopic || "";
+      a = json.a || json.alertTopic || "";
+      c = json.c || json.cmdTopic || "";
+    } else if (raw.startsWith("setup=")) {
+      const only = raw.slice(6).split("&")[0].split("#")[0];
+      const json = JSON.parse(b64urlDecode(only));
       d = json.d || json.dataTopic || "";
       a = json.a || json.alertTopic || "";
       c = json.c || json.cmdTopic || "";
     } else {
-      const sp = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
-      if (sp.has("setup")) {
-        const json = JSON.parse(b64urlDecode(sp.get("setup")));
-        d = json.d || json.dataTopic || "";
-        a = json.a || json.alertTopic || "";
-        c = json.c || json.cmdTopic || "";
-      } else {
-        d = sp.get("d") || sp.get("dataTopic") || "";
-        a = sp.get("a") || sp.get("alertTopic") || "";
-        c = sp.get("c") || sp.get("cmdTopic") || "";
-      }
+      d = sp.get("d") || sp.get("dataTopic") || "";
+      a = sp.get("a") || sp.get("alertTopic") || "";
+      c = sp.get("c") || sp.get("cmdTopic") || "";
     }
   } catch (e) { return null; }
   d = normalizeTopic(d); a = normalizeTopic(a); c = normalizeTopic(c);
@@ -345,7 +419,7 @@ function applySetupFromUrl() {
   let parsed = null;
   if (q && (q.startsWith("setup=") || q.includes("setup=") || q.includes("dataTopic=") || /(^|[?&])d=/.test(q))) {
     preferDocumentUrlForHomeScreen();
-    parsed = parseSetupPayload(q.startsWith("setup=") ? q : ("?" + q));
+    parsed = parseSetupPayload("?" + q);
   }
   if (!parsed && h && (h.startsWith("setup=") || h.includes("dataTopic=") || h.includes("d="))) {
     preferDocumentUrlForHomeScreen();
@@ -974,9 +1048,21 @@ if ("serviceWorker" in navigator && location.protocol !== "file:") {
   navigator.serviceWorker.register("./sw.js").catch(() => {});
 }
 
-if (!MOCK && !CFG.dataTopic) { openSettings(); } else { refresh(); }
 schedule();
 document.addEventListener("visibilitychange", () => { if (!document.hidden) refresh(); });
+(async () => {
+  if (!normalizeTopic(CFG.dataTopic)) {
+    await restoreSettingsIfNeeded();
+  }
+  if (!MOCK && !normalizeTopic(CFG.dataTopic)) {
+    const hs = document.getElementById("hsNote");
+    const standalone = !!(navigator.standalone || window.matchMedia("(display-mode: standalone)").matches);
+    if (hs && standalone) hs.style.display = "block";
+    openSettings();
+  } else {
+    refresh();
+  }
+})();
 </script>
 </body>
 </html>
