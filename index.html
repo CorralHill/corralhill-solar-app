@@ -190,14 +190,45 @@ const $ = (id) => document.getElementById(id);
 const params = new URLSearchParams(location.search);
 const MOCK = params.has("mock") || location.protocol === "file:";
 
+function normalizeTopic(t) {
+  let s = String(t == null ? "" : t);
+  s = s.replace(/[ -​-‍﻿]/g, "");
+  s = s.trim().replace(/^["']+|["']+$/g, "").trim();
+  const m = s.match(/^https?:\/\/[^\/]+\/(.+)$/i);
+  if (m) s = m[1];
+  s = s.replace(/^\/+|\/+$/g, "");
+  s = s.split(/[?#]/)[0];
+  s = s.replace(/\s+/g, "");
+  return s;
+}
+function topicDbg() {
+  const d = normalizeTopic(CFG.dataTopic);
+  const a = normalizeTopic(CFG.alertTopic);
+  const c = normalizeTopic(CFG.cmdTopic);
+  return "dbg: data topic len=" + d.length
+    + " starts '" + d.slice(0, 12)
+    + "' alert starts '" + a.slice(0, 12)
+    + "' cmd starts '" + c.slice(0, 12)
+    + "' base=" + (CFG.ntfyBase || "");
+}
 function loadSettings() {
   try {
     const s = JSON.parse(localStorage.getItem("chSettings") || "{}");
-    return Object.assign({}, DEFAULTS, s);
+    const merged = Object.assign({}, DEFAULTS, s);
+    merged.dataTopic = normalizeTopic(merged.dataTopic);
+    merged.alertTopic = normalizeTopic(merged.alertTopic);
+    merged.cmdTopic = normalizeTopic(merged.cmdTopic);
+    if (merged.ntfyBase) merged.ntfyBase = String(merged.ntfyBase).trim().replace(/\/+$/, "");
+    return merged;
   } catch { return Object.assign({}, DEFAULTS); }
 }
 function saveSettings(s) {
-  localStorage.setItem("chSettings", JSON.stringify(s));
+  const out = Object.assign({}, s);
+  out.dataTopic = normalizeTopic(out.dataTopic);
+  out.alertTopic = normalizeTopic(out.alertTopic);
+  out.cmdTopic = normalizeTopic(out.cmdTopic);
+  if (out.ntfyBase) out.ntfyBase = String(out.ntfyBase).trim().replace(/\/+$/, "");
+  localStorage.setItem("chSettings", JSON.stringify(out));
 }
 function b64urlDecode(s) {
   const b64 = String(s).replace(/-/g, "+").replace(/_/g, "/");
@@ -224,7 +255,7 @@ function applySetupFromHash() {
   } catch (e) {
     return false;
   }
-  d = String(d).trim(); a = String(a).trim(); c = String(c).trim();
+  d = normalizeTopic(d); a = normalizeTopic(a); c = normalizeTopic(c);
   if (!d || !a || !c) return false;
   CFG = { ...CFG, dataTopic: d, alertTopic: a, cmdTopic: c };
   saveSettings(CFG);
@@ -237,7 +268,7 @@ let CFG = loadSettings();
 applySetupFromHash();
 
 function topicUrl(topic, path) {
-  const t = (topic || "").replace(/^https?:\/\/[^/]+\//, "").replace(/\/$/, "");
+  const t = encodeURIComponent(normalizeTopic(topic));
   return `${CFG.ntfyBase}/${t}${path || ""}`;
 }
 
@@ -409,7 +440,7 @@ async function refresh() {
     }
     $("heard").textContent = "Could not reach ntfy (" + (e.message || e) + ")";
     $("heard").className = "heard bad";
-    $("banner").textContent = "Check Settings topics, or open with ?mock=1 to preview.";
+    $("banner").textContent = topicDbg() + " — Check Settings topics, or open with ?mock=1 to preview.";
     $("banner").classList.add("show");
   }
 }
@@ -453,9 +484,9 @@ function closeSettings() { $("settings").classList.remove("open"); }
 function applySettings() {
   CFG = {
     ...CFG,
-    dataTopic: $("dataTopic").value.trim(),
-    alertTopic: $("alertTopic").value.trim(),
-    cmdTopic: $("cmdTopic").value.trim(),
+    dataTopic: normalizeTopic($("dataTopic").value),
+    alertTopic: normalizeTopic($("alertTopic").value),
+    cmdTopic: normalizeTopic($("cmdTopic").value),
     pollMin: Math.max(1, Math.min(60, Number($("pollMin").value) || 5))
   };
   saveSettings(CFG);
