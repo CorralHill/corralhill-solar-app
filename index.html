@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Corral Hill">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#0f1419">
 <title>Corral Hill Power</title>
@@ -222,6 +223,7 @@ input[type=text],input[type=number]{width:100%;background:var(--bg);border:1px s
   <div class="sheet">
     <h2>Settings</h2>
     <p class="note">Topics are like passwords. Enter the three from the Pi's pi.env. Nothing else is baked into the public app.</p>
+    <p class="note">Home Screen copy: add it from the setup link page.</p>
     <label for="dataTopic">Data topic (status feed)</label>
     <input id="dataTopic" type="text" autocomplete="off" spellcheck="false" placeholder="corralhill-data-…">
     <label for="alertTopic">Alert topic (history)</label>
@@ -299,9 +301,21 @@ function b64urlDecode(s) {
   const pad = b64 + "=".repeat((4 - (b64.length % 4)) % 4);
   return atob(pad);
 }
+function preferDocumentUrlForHomeScreen() {
+  /* iOS Add to Home Screen uses the document URL (incl. hash) when no web
+     app manifest is present. Keep apple-mobile-web-app-* + touch icon so
+     the home-screen copy still launches standalone with the right name/icon. */
+  try {
+    document.querySelectorAll('link[rel="manifest"]').forEach((el) => el.remove());
+  } catch (e) {}
+}
 function applySetupFromHash() {
   const h = (location.hash || "").replace(/^#/, "");
   if (!h) return false;
+  /* Keep #setup= in the URL so Add to Home Screen can capture it. */
+  if (h.startsWith("setup=") || h.includes("dataTopic=") || h.includes("d=")) {
+    preferDocumentUrlForHomeScreen();
+  }
   let d = "", a = "", c = "";
   try {
     if (h.startsWith("setup=")) {
@@ -320,7 +334,9 @@ function applySetupFromHash() {
   if (!d || !a || !c) return false;
   CFG = { ...CFG, dataTopic: d, alertTopic: a, cmdTopic: c };
   saveSettings(CFG);
-  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+  /* Intentionally do NOT strip location.hash — standalone home-screen apps
+     get a separate localStorage; the hash must remain so a fresh install
+     can re-seed settings on every launch from the setup URL. */
   return true;
 }
 let CFG = loadSettings();
