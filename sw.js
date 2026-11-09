@@ -1,5 +1,5 @@
 /* Corral Hill PWA service worker: cache shell + last snapshot for offline. */
-const CACHE = "ch-shell-v4";
+const CACHE = "ch-shell-v5";
 const SHELL = [
   "./",
   "./index.html",
@@ -28,7 +28,9 @@ self.addEventListener("fetch", (e) => {
         const copy = r.clone();
         caches.open(CACHE).then((c) => c.put(e.request, copy));
         return r;
-      }).catch(() => caches.match(e.request).then((r) => r || caches.match("./index.html")))
+      }).catch(() =>
+        caches.match(e.request, { ignoreSearch: true }).then((r) => r || caches.match("./index.html"))
+      )
     );
     return;
   }

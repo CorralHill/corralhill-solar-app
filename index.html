@@ -302,46 +302,62 @@ function b64urlDecode(s) {
   return atob(pad);
 }
 function preferDocumentUrlForHomeScreen() {
-  /* iOS Add to Home Screen uses the document URL (incl. hash) when no web
+  /* iOS Add to Home Screen uses the document URL (incl. query) when no web
      app manifest is present. Keep apple-mobile-web-app-* + touch icon so
-     the home-screen copy still launches standalone with the right name/icon. */
+     the home-screen copy still launches standalone with the right name/icon.
+     Query (?setup=) survives Add to Home Screen; #hash does not on iOS. */
   try {
     document.querySelectorAll('link[rel="manifest"]').forEach((el) => el.remove());
   } catch (e) {}
 }
-function applySetupFromHash() {
-  const h = (location.hash || "").replace(/^#/, "");
-  if (!h) return false;
-  /* Keep #setup= in the URL so Add to Home Screen can capture it. */
-  if (h.startsWith("setup=") || h.includes("dataTopic=") || h.includes("d=")) {
-    preferDocumentUrlForHomeScreen();
-  }
+function parseSetupPayload(raw) {
   let d = "", a = "", c = "";
+  if (!raw) return null;
   try {
-    if (h.startsWith("setup=")) {
-      const json = JSON.parse(b64urlDecode(h.slice(6)));
+    if (raw.startsWith("setup=")) {
+      const json = JSON.parse(b64urlDecode(raw.slice(6)));
       d = json.d || json.dataTopic || "";
       a = json.a || json.alertTopic || "";
       c = json.c || json.cmdTopic || "";
     } else {
-      const sp = new URLSearchParams(h);
-      d = sp.get("d") || sp.get("dataTopic") || "";
-      a = sp.get("a") || sp.get("alertTopic") || "";
-      c = sp.get("c") || sp.get("cmdTopic") || "";
+      const sp = new URLSearchParams(raw.startsWith("?") ? raw.slice(1) : raw);
+      if (sp.has("setup")) {
+        const json = JSON.parse(b64urlDecode(sp.get("setup")));
+        d = json.d || json.dataTopic || "";
+        a = json.a || json.alertTopic || "";
+        c = json.c || json.cmdTopic || "";
+      } else {
+        d = sp.get("d") || sp.get("dataTopic") || "";
+        a = sp.get("a") || sp.get("alertTopic") || "";
+        c = sp.get("c") || sp.get("cmdTopic") || "";
+      }
     }
-  } catch (e) { return false; }
+  } catch (e) { return null; }
   d = normalizeTopic(d); a = normalizeTopic(a); c = normalizeTopic(c);
-  if (!d || !a || !c) return false;
-  CFG = { ...CFG, dataTopic: d, alertTopic: a, cmdTopic: c };
+  if (!d || !a || !c) return null;
+  return { d, a, c };
+}
+function applySetupFromUrl() {
+  /* Prefer ?setup= query (survives iOS Home Screen). Keep #setup= as fallback.
+     Do NOT strip query or hash so a fresh standalone launch can re-seed. */
+  const q = (location.search || "").replace(/^\?/, "");
+  const h = (location.hash || "").replace(/^#/, "");
+  let parsed = null;
+  if (q && (q.startsWith("setup=") || q.includes("setup=") || q.includes("dataTopic=") || /(^|[?&])d=/.test(q))) {
+    preferDocumentUrlForHomeScreen();
+    parsed = parseSetupPayload(q.startsWith("setup=") ? q : ("?" + q));
+  }
+  if (!parsed && h && (h.startsWith("setup=") || h.includes("dataTopic=") || h.includes("d="))) {
+    preferDocumentUrlForHomeScreen();
+    parsed = parseSetupPayload(h);
+  }
+  if (!parsed) return false;
+  CFG = { ...CFG, dataTopic: parsed.d, alertTopic: parsed.a, cmdTopic: parsed.c };
   saveSettings(CFG);
-  /* Intentionally do NOT strip location.hash — standalone home-screen apps
-     get a separate localStorage; the hash must remain so a fresh install
-     can re-seed settings on every launch from the setup URL. */
   return true;
 }
 let CFG = loadSettings();
-applySetupFromHash();
-
+applySetupFromUrl();
 function topicUrl(topic, path) {
   const t = encodeURIComponent(normalizeTopic(topic));
   return `${CFG.ntfyBase}/${t}${path || ""}`;
